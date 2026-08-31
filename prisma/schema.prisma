@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+}
+
+enum DeliveryStatus {
+  PENDING_REVIEW
+  APPROVED_AND_SENT
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  description    String
+  price          Int
+  spreadsheetUrl String
+  orders         Order[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Order {
+  id                      String         @id @default(cuid())
+  productId               String
+  product                 Product        @relation(fields: [productId], references: [id])
+  clientName              String
+  clientEmail             String
+  clientWhatsapp          String
+  answersAnamnesis        String
+  paymentStatus           PaymentStatus  @default(PENDING)
+  deliveryStatus          DeliveryStatus @default(PENDING_REVIEW)
+  createdAt               DateTime       @default(now())
+  approvedAt              DateTime?
+  generatedSpreadsheetUrl String?
+  generatedPdfUrl         String?
+}
