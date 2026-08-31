@@ -4,7 +4,6 @@ import CheckoutForm from '@/components/CheckoutForm';
 export const dynamic = 'force-dynamic';
 
 export default async function CheckoutPage() {
-<<<<<<< HEAD
   let product = null;
 
   try {
@@ -23,15 +22,6 @@ export default async function CheckoutPage() {
         <a href="/" className="mt-6 inline-block rounded-lg bg-black px-6 py-3 text-white font-bold hover:bg-gray-800">
           ← Voltar para o início
         </a>
-=======
-  const product = await prisma.product.findFirst();
-
-  if (!product) {
-    return (
-      <main className="container py-20">
-        <h1 className="text-3xl font-bold">Nenhum produto cadastrado</h1>
-        <p className="mt-3">Execute o seed do banco antes de abrir o checkout.</p>
->>>>>>> 1608bef8dee8cbf07d571fd9acc970b2df48f5ac
       </main>
     );
   }
