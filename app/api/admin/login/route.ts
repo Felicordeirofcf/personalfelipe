@@ -1,0 +1,3 @@
+import { NextResponse } from 'next/server';
+import { createAdminSession, ADMIN_COOKIE, MAX_AGE } from '@/lib/admin-session';
+export async function POST(req: Request) { try { const { password } = await req.json(); if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) return NextResponse.json({ error: 'Senha inválida.' }, { status: 401 }); const response = NextResponse.json({ ok: true }); response.cookies.set(ADMIN_COOKIE, createAdminSession(), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: MAX_AGE }); return response; } catch { return NextResponse.json({ error: 'Requisição inválida.' }, { status: 400 }); } }

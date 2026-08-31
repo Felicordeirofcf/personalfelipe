@@ -1,0 +1,4 @@
+import { prisma } from '@/lib/prisma';
+import { generateWorkout } from '@/lib/workout-generator';
+export const runtime = 'nodejs';
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) { try { const { id } = await params; const order = await prisma.order.findUnique({ where: { id } }); if (!order) return Response.json({ error: 'Pedido não encontrado.' }, { status: 404 }); const url = new URL(request.url); const settings = { split: url.searchParams.get('split') || undefined, exercisesPerSession: Number(url.searchParams.get('exercises') || 0) || undefined, sets: Number(url.searchParams.get('sets') || 0) || undefined, repRange: url.searchParams.get('reps') || undefined, method: url.searchParams.get('method') || undefined }; return Response.json(await generateWorkout(JSON.parse(order.answersAnamnesis), settings)); } catch { return Response.json({ error: 'Não foi possível gerar o rascunho.' }, { status: 500 }); } }

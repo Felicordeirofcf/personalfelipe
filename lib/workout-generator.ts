@@ -1,0 +1,29 @@
+import { EXERCISE_DATABASE, exerciseBase, exerciseById, type CatalogExercise } from './exercises';
+
+export type GenerationSettings = {
+  split?: string;
+  exercisesPerSession?: number;
+  sets?: number;
+  repRange?: string;
+  method?: string;
+};
+export type WorkoutRow = { day: string; exerciseId: string; muscleGroup: string; exercise: string; orientation: string; sets: string; reps: string; rest: string; videoUrl: string };
+export type WorkoutPlan = { title: string; rows: WorkoutRow[] };
+
+const DEFAULTS: Required<GenerationSettings> = { split: 'AB', exercisesPerSession: 5, sets: 3, repRange: '10–12', method: 'Sem método especial; priorize técnica, amplitude tolerada e controle excêntrico.' };
+export const GEMINI_SYSTEM_PROMPT = `Você é estritamente um Fisiologista do Exercício, Cinesiólogo e Personal Trainer sênior. Siga princípios de Cinesiologia, Biomecânica e recomendações aplicáveis de ACSM/NSCA. Não diagnostique e não substitua avaliação clínica.
+
+CATÁLOGO FECHADO: você só pode selecionar exercícios que existam na MATRIZ OFICIAL abaixo. Nomes inventados, variações livres, IDs inexistentes e URLs criadas são proibidos. Retorne somente o exerciseId exato do catálogo; o backend resolverá nome, grupamento, orientação e videoUrl.
+
+METODOLOGIA: considere curva de resistência, torque articular, tensão mecânica na posição alongada para hipertrofia, sinergia entre agonistas/antagonistas/estabilizadores, limitações articulares e histórico de lesões. Descreva controle excêntrico, intenção concêntrica, alinhamento, amplitude segura e respiração. Ajuste volume, intensidade, cadência e descanso ao objetivo e nível. Multiarticulares pesados normalmente usam 90–120s; exercícios de menor custo, 45–60s, sempre respeitando a anamnese.
+
+Retorne SOMENTE JSON válido: {"title": string, "rows": [{"day": string, "exerciseId": string, "sets": string, "reps": string, "rest": string, "orientation": string}]}.`;
+
+function settingsOf(settings?: GenerationSettings): Required<GenerationSettings> { const s = { ...DEFAULTS, ...settings }; return { split: String(s.split), exercisesPerSession: Math.min(7, Math.max(4, Number(s.exercisesPerSession) || 5)), sets: Math.min(4, Math.max(3, Number(s.sets) || 3)), repRange: String(s.repRange || DEFAULTS.repRange), method: String(s.method || DEFAULTS.method).slice(0, 300) }; }
+function splitDays(split: string) { const normalized = split.toUpperCase().replace(/\s/g, ''); if (normalized === 'FULLBODY' || normalized === 'FULLBODY') return ['Fullbody']; const letters = normalized.replace(/[^A-E]/g, ''); return letters ? [...new Set(letters.split(''))].map(letter => `Treino ${letter}`) : ['Treino A', 'Treino B']; }
+function validUrl(value: unknown) { try { const url = new URL(String(value)); return ['http:', 'https:'].includes(url.protocol) ? url.toString() : ''; } catch { return ''; } }
+function fallback(anamnesis: any, raw?: GenerationSettings): WorkoutPlan { const s = settingsOf(raw); const days = splitDays(s.split); const pool = [...exerciseBase]; const rows: WorkoutRow[] = []; for (let dayIndex = 0; dayIndex < days.length; dayIndex++) for (let i = 0; i < s.exercisesPerSession; i++) { const e = pool[(dayIndex * s.exercisesPerSession + i) % pool.length]; rows.push({ day: days[dayIndex], exerciseId: e.id, muscleGroup: e.muscleGroup, exercise: e.name, orientation: `${e.orientation} Método: ${s.method}`, sets: String(s.sets), reps: s.repRange, rest: i < 3 ? '90s' : '60s', videoUrl: e.videoUrl }); } return { title: `Plano EVOTrainer — ${anamnesis.goals || 'condicionamento'}`, rows }; }
+function resolveExercise(row: any, index: number): CatalogExercise { return exerciseById.get(String(row.exerciseId || '')) || exerciseBase[index % exerciseBase.length]; }
+export function normalizeWorkoutPlan(input: any, anamnesis: any, raw?: GenerationSettings): WorkoutPlan { const s = settingsOf(raw); const fallbackPlan = fallback(anamnesis, s); if (!input?.rows?.length) return fallbackPlan; const rows = input.rows.map((row: any, index: number) => { const e = resolveExercise(row, index); return { day: String(row.day || `Treino ${String.fromCharCode(65 + index)}`), exerciseId: e.id, muscleGroup: e.muscleGroup, exercise: String(row.exercise || e.name), orientation: String(row.orientation || `${e.orientation} Método: ${s.method}`), sets: String(row.sets || s.sets), reps: String(row.reps || s.repRange), rest: String(row.rest || '60–90s'), videoUrl: validUrl(e.videoUrl) || e.videoUrl }; }); return { title: String(input.title || fallbackPlan.title), rows }; }
+
+export async function generateWorkout(anamnesis: any, raw?: GenerationSettings): Promise<WorkoutPlan> { const s = settingsOf(raw); const key = process.env.GEMINI_API_KEY; if (!key) return fallback(anamnesis, s); const prompt = `ANAMNESE: ${JSON.stringify(anamnesis)}\nREGRAS OBRIGATÓRIAS DO PERSONAL: split=${s.split}; sessões=${splitDays(s.split).join(', ')}; exercícios por sessão=${s.exercisesPerSession}; séries padrão=${s.sets}; faixa de repetições=${s.repRange}; estímulo/método=${s.method}.\nMATRIZ OFICIAL: ${JSON.stringify(EXERCISE_DATABASE)}\nGere exatamente ${s.exercisesPerSession} exercício(s) por sessão e use somente exerciseId existentes.`; try { const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-2.5-flash'}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system_instruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] }, contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0 } }) }); if (!res.ok) return fallback(anamnesis, s); const data = await res.json(); const text = data.candidates?.[0]?.content?.parts?.[0]?.text; return normalizeWorkoutPlan(JSON.parse(text), anamnesis, s); } catch { return fallback(anamnesis, s); } }

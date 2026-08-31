@@ -1,0 +1,8 @@
+import { promises as fs } from 'fs';
+import path from 'path';
+import { prisma } from '@/lib/prisma';
+import { generateWorkout, normalizeWorkoutPlan } from '@/lib/workout-generator';
+import { createWorkoutPdf } from '@/lib/workout-pdf';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) { let temporaryPath = ''; try { const { id } = await params; const order = await prisma.order.findUnique({ where: { id } }); if (!order) return Response.json({ error: 'Pedido não encontrado.' }, { status: 404 }); const anamnesis = JSON.parse(order.answersAnamnesis); const body = await request.json().catch(() => ({})); const plan = body.plan?.rows?.length ? normalizeWorkoutPlan(body.plan, anamnesis, body.settings) : await generateWorkout(anamnesis, body.settings); const temporaryId = `${order.id}-preview-${Date.now()}`; const pdfUrl = await createWorkoutPdf(plan, order.clientName, anamnesis, temporaryId); temporaryPath = path.join(process.cwd(), 'public', pdfUrl.slice(1)); const pdfBuffer = await fs.readFile(temporaryPath); return new Response(new Uint8Array(pdfBuffer), { status: 200, headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="EVOTrainer-preview-${order.id}.pdf"`, 'Content-Length': String(pdfBuffer.byteLength), 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } }); } catch (error) { console.error('Erro na prévia:', error); return Response.json({ error: 'Não foi possível gerar a prévia.' }, { status: 500 }); } finally { if (temporaryPath) await fs.unlink(temporaryPath).catch(() => undefined); } }
