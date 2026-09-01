@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Produto não encontrado.' }, { status: 404 });
     }
 
-    // 1. Cria o pedido no banco respeitando exatamente o seu Schema do Prisma
+    // 1. Cria o pedido no banco respeitando o Schema do Prisma
     const order = await prisma.order.create({
       data: {
         productId: body.productId,
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     // 2. Cria a preferência de pagamento no Mercado Pago (Valor fixo de R$ 50,00)
     const preference = new Preference(client);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://evotrainer.com.br';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.evotrainer.com.br';
 
     const result = await preference.create({
       body: {
@@ -64,14 +64,14 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3. Retorna o ID do pedido e o link de redirecionamento oficial do Mercado Pago (init_point)
+    // 3. Retorna o ID do pedido e o link de redirecionamento oficial
     return NextResponse.json({
       id: order.id,
       init_point: result.init_point,
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Erro no checkout/pedido:', error);
-    return NextResponse.json({ error: 'JSON inválido ou erro interno.' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Erro no checkout/pedido:', error?.message || error);
+    return NextResponse.json({ error: 'Erro interno ao processar o pedido.' }, { status: 500 });
   }
 }
