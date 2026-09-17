@@ -22,27 +22,76 @@ async function buildServer() {
     },
   });
 
-  const configuredOrigins = new Set(env.WEB_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean));
-  const allowedOrigin = (origin: string | undefined) => {
+  // Normaliza e limpa as origens cadastradas no .env (remove barras finais e espaços)
+  const configuredOrigins = new Set(
+    (env.WEB_ORIGIN || '')
+      .split(',')
+      .map((origin) => origin.trim().replace(/\/+$/, ''))
+      .filter(Boolean),
+  );
+
+  const isOriginAllowed = (origin: string | undefined): boolean => {
+    // Permite chamadas locais, mobile, server-to-server ou healthchecks sem origin
     if (!origin) return true;
-    if (configuredOrigins.has(origin)) return true;
+
+    const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+
+    // Verifica match direto com .env
+    if (configuredOrigins.has(normalizedOrigin)) return true;
+
     try {
-      const url = new URL(origin);
-      return url.protocol === 'https:' && url.hostname.endsWith('.vercel.app');
+      const url = new URL(normalizedOrigin);
+      const hostname = url.hostname;
+
+      // Libera subdomínios da Vercel
+      if (url.protocol === 'https:' && hostname.endsWith('.vercel.app')) {
+        return true;
+      }
+
+      // Libera os domínios da aplicação com ou sem www
+      if (
+        hostname === 'evotrainer.com.br' ||
+        hostname.endsWith('.evotrainer.com.br') ||
+        hostname === 'felipepersonal.com' ||
+        hostname.endsWith('.felipepersonal.com')
+      ) {
+        return true;
+      }
+
+      // Ambiente de desenvolvimento local
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return true;
+      }
+
+      return false;
     } catch {
       return false;
     }
   };
 
   await app.register(cors, {
-    origin: (origin, callback) => callback(null, allowedOrigin(origin)),
+    origin: (origin, callback) => {
+      const allowed = isOriginAllowed(origin);
+      callback(null, allowed);
+    },
     credentials: true,
-    methods: ['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Origin', 'Accept', 'Content-Type', 'Authorization'],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+    ],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
     optionsSuccessStatus: 204,
+    preflight: true,
+    strictAdditionalHostCheck: false,
   });
+
   await app.register(sensible);
   await app.register(jwt, { secret: env.JWT_SECRET });
+
   await app.register(swagger, {
     openapi: {
       info: {
@@ -87,9 +136,10 @@ async function buildServer() {
     request.log.error(error);
     if (reply.sent) return;
     const normalized = error instanceof Error ? error : new Error('Erro desconhecido');
-    const candidateStatus = 'statusCode' in normalized && typeof normalized.statusCode === 'number'
-      ? normalized.statusCode
-      : 500;
+    const candidateStatus =
+      'statusCode' in normalized && typeof normalized.statusCode === 'number'
+        ? normalized.statusCode
+        : 500;
     const statusCode = candidateStatus < 500 ? candidateStatus : 500;
     reply.status(statusCode).send({
       error: statusCode === 500 ? 'Erro interno do servidor.' : normalized.message,
