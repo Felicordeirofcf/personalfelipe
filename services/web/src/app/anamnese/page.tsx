@@ -27,6 +27,7 @@ export default function AnamnesePage() {
   const [currentUser, setCurrentUser] = useState<ReturnType<typeof getSessionUser>>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [form, setForm] = useState({
     userId: '',
     goal: 'Hipertrofia com melhora do condicionamento geral',
@@ -64,6 +65,12 @@ export default function AnamnesePage() {
     }));
   }
 
+  async function startCheckout() {
+    setCheckoutLoading(true);
+    try { const checkout = await apiFetch<{ initPoint: string }>('/payments/checkout', { method: 'POST' }); window.location.href = checkout.initPoint; }
+    catch (error) { setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Não foi possível abrir o pagamento.' }); setCheckoutLoading(false); }
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setMessage(null);
@@ -91,6 +98,10 @@ export default function AnamnesePage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (currentUser && currentUser.subscriptionStatus !== 'ACTIVE') {
+    return <main className="mx-auto max-w-xl px-5 py-16"><Panel className="p-8 text-center"><p className="text-xs font-black uppercase tracking-wider text-emerald-400">Pagamento necessário</p><h1 className="mt-3 font-display text-3xl font-bold text-white">Libere sua avaliação personalizada</h1><p className="mt-4 text-sm leading-6 text-zinc-400">Faça o pagamento único de <strong className="text-white">R$ 40,00</strong> para liberar a anamnese, o treino interativo, vídeos de execução e a ficha em PDF.</p><Button className="mt-7 w-full" loading={checkoutLoading} onClick={startCheckout}>{checkoutLoading ? 'Abrindo pagamento seguro...' : 'Pagar R$ 40,00 no Mercado Pago'}</Button></Panel></main>;
   }
 
   return (
