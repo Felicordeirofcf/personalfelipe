@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/api';
 import { getSessionUser } from '@/lib/auth';
 import { Button, Notice, PageIntro, Panel } from '@/components/ui';
-import { User } from '@/types';
 import { Check, ChevronRight, CircleAlert, ClipboardPlus, HeartPulse } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,9 +24,7 @@ const equipmentOptions = [
 
 export default function AnamnesePage() {
   const router = useRouter();
-  const sessionUser = getSessionUser();
-  const [students, setStudents] = useState<User[]>([]);
-  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [currentUser, setCurrentUser] = useState<ReturnType<typeof getSessionUser>>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [form, setForm] = useState({
@@ -42,20 +39,21 @@ export default function AnamnesePage() {
   });
 
   useEffect(() => {
-    if (sessionUser?.role === 'STUDENT') {
-      setForm((current) => ({ ...current, userId: sessionUser.id }));
-      setLoadingStudents(false);
+    const authenticatedUser = getSessionUser();
+
+    if (!authenticatedUser) {
+      router.replace('/cadastro');
       return;
     }
 
-    apiFetch<{ users: User[] }>('/users?role=STUDENT')
-      .then(({ users }) => {
-        setStudents(users);
-        if (users[0]) setForm((current) => ({ ...current, userId: users[0].id }));
-      })
-      .catch((error: Error) => setMessage({ kind: 'error', text: error.message }))
-      .finally(() => setLoadingStudents(false));
-  }, [sessionUser?.id, sessionUser?.role]);
+    if (authenticatedUser.role !== 'STUDENT') {
+      router.replace('/admin');
+      return;
+    }
+
+    setCurrentUser(authenticatedUser);
+    setForm((current) => ({ ...current, userId: authenticatedUser.id }));
+  }, [router]);
 
   function toggleRestriction(item: string) {
     setForm((current) => ({
@@ -87,7 +85,7 @@ export default function AnamnesePage() {
         }),
       });
       setMessage({ kind: 'success', text: 'Avaliação enviada com sucesso! Redirecionando para o seu painel...' });
-      window.setTimeout(() => router.push(sessionUser?.role === 'STUDENT' ? '/aluno' : '/admin'), 700);
+      window.setTimeout(() => router.push('/aluno'), 700);
     } catch (error) {
       setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Não foi possível salvar.' });
     } finally {
@@ -112,13 +110,13 @@ export default function AnamnesePage() {
                 <div><p className="text-xs font-black uppercase tracking-wider text-emerald-400">Etapa 01</p><h2 className="font-display text-xl font-semibold text-zinc-100">Perfil e objetivo</h2></div>
               </div>
               <div className="grid gap-5 md:grid-cols-2">
-                <label>
-                  <span className="field-label">Aluno</span>
-                  <select className="field-control" value={form.userId} disabled={loadingStudents || sessionUser?.role === 'STUDENT'} onChange={(event) => setForm({ ...form, userId: event.target.value })} required>
-                    {loadingStudents ? <option>Carregando alunos...</option> : null}
-                    {students.map((student) => <option key={student.id} value={student.id}>{student.name} · {student.email}</option>)}
-                  </select>
-                </label>
+                <div>
+                  <span className="field-label">Aluno identificado</span>
+                  <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/90 px-4 py-3">
+                    <strong className="block text-sm font-semibold text-zinc-100">{currentUser?.name ?? 'Carregando seu perfil...'}</strong>
+                    {currentUser ? <span className="mt-1 block text-xs text-zinc-400">{currentUser.email}</span> : null}
+                  </div>
+                </div>
                 <label>
                   <span className="field-label">Nível de experiência</span>
                   <select className="field-control" value={form.experience} onChange={(event) => setForm({ ...form, experience: event.target.value as typeof form.experience })}>
