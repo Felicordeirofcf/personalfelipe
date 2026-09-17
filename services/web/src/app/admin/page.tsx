@@ -74,7 +74,7 @@ export default function AdminPage() {
     try {
       const response = await apiFetch<{ workout: Workout; generationMode: 'mock' | 'openai' }>('/workouts/generate', {
         method: 'POST',
-        body: JSON.stringify({ anamnesisId, excludeExerciseNames: workouts.filter((item) => item.userId === anamneses.find((entry) => entry.id === anamnesisId)?.user.id).flatMap((item) => item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))) }),
+        body: JSON.stringify({ anamnesisId, studentId: anamneses.find((entry) => entry.id === anamnesisId)?.user.id, userId: anamneses.find((entry) => entry.id === anamnesisId)?.user.id, excludeExerciseNames: workouts.filter((item) => item.userId === anamneses.find((entry) => entry.id === anamnesisId)?.user.id).flatMap((item) => item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))) }),
       });
       setWorkouts((current) => [response.workout, ...current.filter((item) => item.id !== response.workout.id)]);
       setSelectedWorkout(response.workout);

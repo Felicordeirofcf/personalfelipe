@@ -9,7 +9,14 @@ import { sendWorkoutApprovedWhatsApp } from '../notifications/whatsapp.service';
 import { getActiveWorkoutForStudent } from './workout.service';
 import { toWorkoutView, workoutInclude } from './workout.view';
 
-const GenerateWorkoutSchema = z.object({ anamnesisId: z.string().trim().min(1), excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional() }).strict();
+const GenerateWorkoutSchema = z.object({
+  anamnesisId: z.string().trim().min(1).optional(),
+  studentId: z.string().trim().min(1).optional(),
+  userId: z.string().trim().min(1).optional(),
+  level: z.string().optional(),
+  goal: z.string().optional(),
+  excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
+}).passthrough();
 const ParamsSchema = z.object({ id: z.string().trim().min(1) });
 const StudentParamsSchema = z.object({ userId: z.string().trim().min(1) });
 const ListQuerySchema = z.object({
@@ -69,13 +76,27 @@ export async function workoutRoutes(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const parsed = GenerateWorkoutSchema.safeParse(request.body);
+      const parsed = GenerateWorkoutSchema.safeParse(request.body ?? {});
       if (!parsed.success) {
-        return reply.badRequest('Informe um anamnesisId válido.');
+        return reply.badRequest('Informe um anamnesisId válido ou selecione um aluno com anamnese preenchida.');
+      }
+
+      let targetAnamnesisId = parsed.data.anamnesisId;
+      const targetStudentId = parsed.data.studentId ?? parsed.data.userId;
+      if (!targetAnamnesisId && targetStudentId) {
+        const latestAnamnesis = await prisma.anamnesis.findFirst({
+          where: { userId: targetStudentId },
+          orderBy: { createdAt: 'desc' },
+          select: { id: true },
+        });
+        targetAnamnesisId = latestAnamnesis?.id;
+      }
+      if (!targetAnamnesisId) {
+        return reply.badRequest('Informe um anamnesisId válido ou selecione um aluno com anamnese preenchida.');
       }
 
       const anamnesis = await prisma.anamnesis.findUnique({
-        where: { id: parsed.data.anamnesisId },
+        where: { id: targetAnamnesisId },
         include: { user: { select: { id: true, name: true } } },
       });
       if (!anamnesis) {
