@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [anamneses, setAnamneses] = useState<Anamnesis[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
@@ -31,6 +32,7 @@ export default function AdminPage() {
       ]);
       setAnamneses(anamnesisData.anamneses);
       setWorkouts(workoutData.workouts);
+      setSelectedStudentId((current) => current || anamnesisData.anamneses[0]?.user.id || '');
       setSelectedWorkout((current) => {
         if (current) return workoutData.workouts.find((item) => item.id === current.id) ?? workoutData.workouts[0] ?? null;
         return workoutData.workouts.find((item) => item.status === 'DRAFT') ?? workoutData.workouts[0] ?? null;
@@ -41,6 +43,14 @@ export default function AdminPage() {
       setLoading(false);
     }
   }, []);
+
+  const selectedAnamnesis = anamneses.find((item) => item.user.id === selectedStudentId) ?? null;
+
+  useEffect(() => {
+    if (!selectedStudentId) return;
+    const latest = workouts.find((item) => item.userId === selectedStudentId);
+    setSelectedWorkout(latest ?? null);
+  }, [selectedStudentId, workouts]);
 
   useEffect(() => {
     if (!hasRole('ADMIN')) {
@@ -106,6 +116,22 @@ export default function AdminPage() {
 
       <CommercialAdminPanel />
 
+      <Panel className="mb-7 p-5 md:p-6">
+        <div className="grid gap-5 lg:grid-cols-[minmax(260px,360px)_1fr] lg:items-end">
+          <label className="block">
+            <span className="field-label">Aluno em atendimento</span>
+            <select className="field-control" value={selectedStudentId} onChange={(event) => setSelectedStudentId(event.target.value)}>
+              <option value="">Selecione um aluno</option>
+              {anamneses.map((item) => <option key={item.user.id} value={item.user.id}>{item.user.name} · {item.user.email}</option>)}
+            </select>
+          </label>
+          {selectedAnamnesis ? <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-bold text-white">{selectedAnamnesis.user.name}</p><p className="text-xs text-zinc-400">{selectedAnamnesis.user.email}</p></div><StatusBadge status={selectedAnamnesis.latestPlan?.status ?? 'PENDING'} /></div>
+            <div className="mt-3 grid gap-2 text-xs text-zinc-300 sm:grid-cols-3"><span><b className="text-zinc-500">Objetivo</b><br />{selectedAnamnesis.goal}</span><span><b className="text-zinc-500">Frequência</b><br />{selectedAnamnesis.weeklyDays}x por semana</span><span><b className="text-zinc-500">Restrições</b><br />{selectedAnamnesis.injuries.length ? selectedAnamnesis.injuries.join(', ') : 'Nenhuma informada'}</span></div>
+          </div> : <p className="text-sm text-zinc-400">Selecione um aluno para carregar a anamnese, o histórico e o plano atual.</p>}
+        </div>
+      </Panel>
+
       <div className="grid items-start gap-7 xl:grid-cols-[390px_1fr]">
         <div className="space-y-5 xl:sticky xl:top-28">
           <Panel className="overflow-hidden">
@@ -117,7 +143,7 @@ export default function AdminPage() {
               {loading ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Carregando avaliações...</p> : null}
               {!loading && anamneses.length === 0 ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Nenhuma anamnese cadastrada.</p> : null}
               {anamneses.map((item) => (
-                <article key={item.id} className={`rounded-2xl border p-4 transition ${item.pending ? 'border-emerald-400/40 bg-emerald-950/20' : 'border-zinc-800 bg-zinc-900/60'}`}>
+                <article key={item.id} role="button" tabIndex={0} onClick={() => router.push(`/admin/aluno/${item.user.id}`)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') router.push(`/admin/aluno/${item.user.id}`); }} className={`cursor-pointer rounded-2xl border p-4 transition hover:border-emerald-400/50 ${item.pending ? 'border-emerald-400/40 bg-emerald-950/20' : 'border-zinc-800 bg-zinc-900/60'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div><p className="font-display font-bold text-white">{item.user.name}</p><p className="mt-1 text-xs font-semibold text-zinc-400">{experienceLabels[item.experience]}</p></div>
                     {item.pending ? <StatusBadge status="PENDING" /> : item.latestPlan ? <StatusBadge status={item.latestPlan.status} /> : null}
@@ -135,8 +161,8 @@ export default function AdminPage() {
                     <span className="inline-flex items-center gap-1 rounded-lg bg-zinc-800 px-2 py-1 text-zinc-300"><ShieldAlert size={13} /> {item.injuries.length} restrição(ões)</span>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button className="flex-1" loading={generatingId === item.id} onClick={() => generate(item.id)}><Sparkles size={16} /> {item.pending ? 'Gerar com IA' : 'Gerar novamente'}</Button>
-                    {item.latestPlan ? <button className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white" title="Abrir último plano" onClick={() => { const found = workouts.find((workout) => workout.id === item.latestPlan?.id); if (found) setSelectedWorkout(found); }}><CircleGauge size={17} /></button> : null}
+                    <Button className="flex-1" loading={generatingId === item.id} onClick={(event) => { event.stopPropagation(); void generate(item.id); }}><Sparkles size={16} /> {item.pending ? 'Gerar com IA' : 'Gerar novamente'}</Button>
+                    {item.latestPlan ? <button className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white" title="Abrir último plano" onClick={(event) => { event.stopPropagation(); const found = workouts.find((workout) => workout.id === item.latestPlan?.id); if (found) setSelectedWorkout(found); }}><CircleGauge size={17} /></button> : null}
                   </div>
                 </article>
               ))}

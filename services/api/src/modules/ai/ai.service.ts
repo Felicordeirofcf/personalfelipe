@@ -112,6 +112,7 @@ function buildFemaleMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanI
 }
 
 function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
+  const variation = Math.floor(Math.random() * 3);
   if (anamnesis.gender === 'FEMALE') return buildFemaleMockWorkout(anamnesis);
   const equipment = normalize(anamnesis.availableEquip);
   const hasGym = [
@@ -133,7 +134,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
     focus: 'Hipertrofia e força — peitoral, deltoide anterior/lateral e tríceps',
     exercises: [
       exercise(
-        hasGym ? 'Supino inclinado com halteres' : 'Flexão de braços com pés elevados',
+        hasGym ? (variation === 0 ? 'Supino inclinado com halteres' : variation === 1 ? 'Supino inclinado na máquina' : 'Supino inclinado com barra') : 'Flexão de braços com pés elevados',
         4,
         '8-10',
         2,
@@ -142,7 +143,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
         hasGym ? 'Banco em 30° a 45°. Foco no feixe clavicular do peitoral.' : safetyNote,
       ),
       exercise(
-        hasGym ? 'Supino reto com halteres ou barra' : 'Flexão de braços tradicional',
+        hasGym ? (variation === 0 ? 'Supino reto com halteres ou barra' : variation === 1 ? 'Supino reto na máquina' : 'Supino reto com barra') : 'Flexão de braços tradicional',
         4,
         '8-12',
         2,
@@ -151,7 +152,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
         'Cotovelos a ~45° do tronco para preservar a articulação glenoumeral.',
       ),
       exercise(
-        hasGym ? 'Crossover no cabo (polia média)' : 'Crucifixo com elástico',
+        hasGym ? (variation === 0 ? 'Crossover no cabo (polia média)' : variation === 1 ? 'Crucifixo na máquina' : 'Crossover na polia alta') : 'Crucifixo com elástico',
         3,
         '10-12',
         1,
@@ -195,7 +196,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
     focus: 'Hipertrofia e tração — latíssimo do dorso, trapézio, deltoide posterior e flexores de cotovelo',
     exercises: [
       exercise(
-        hasGym ? 'Puxada alta frontal pegada pronada aberta' : 'Barra fixa ou puxada com elástico',
+        hasGym ? (variation === 0 ? 'Puxada alta frontal pegada pronada aberta' : variation === 1 ? 'Puxada neutra na máquina' : 'Puxada unilateral na polia') : 'Barra fixa ou puxada com elástico',
         4,
         '8-12',
         2,
@@ -204,7 +205,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
         'Puxar em direção à fúrcula esternal; focar na depressão escapular inicial.',
       ),
       exercise(
-        hasGym ? 'Remada curvada ou cavalinho' : 'Remada curvada unilateral',
+        hasGym ? (variation === 0 ? 'Remada curvada ou cavalinho' : variation === 1 ? 'Remada articulada na máquina' : 'Remada unilateral com halter') : 'Remada curvada unilateral',
         4,
         '8-10',
         2,
@@ -257,7 +258,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
     focus: 'Força e hipertrofia — quadríceps, isquiotibiais, glúteos e panturrilhas',
     exercises: [
       exercise(
-        hasGym ? 'Agachamento livre ou no Smith' : 'Agachamento livre com pausa',
+        hasGym ? (variation === 0 ? 'Agachamento livre ou no Smith' : variation === 1 ? 'Hack squat' : 'Agachamento frontal com barra') : 'Agachamento livre com pausa',
         4,
         '8-10',
         2,
@@ -319,7 +320,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
     focus: 'Desenvolvimento de deltóides, trapézio e fortalecimento de core',
     exercises: [
       exercise(
-        hasGym ? 'Desenvolvimento com halteres sentado' : 'Flexão pique ou com elevação',
+        hasGym ? (variation === 0 ? 'Desenvolvimento com halteres sentado' : variation === 1 ? 'Desenvolvimento na máquina' : 'Desenvolvimento na polia unilateral') : 'Flexão pique ou com elevação',
         4,
         '8-10',
         2,
@@ -405,8 +406,9 @@ DIRETRIZES TÉCNICAS E METODOLÓGICAS:
 4. BIOMECÂNICA E LESÕES:
    - Proíba desenvolvimento por trás do pescoço ou puxadas atrás da nuca sob qualquer hipótese.
 	   - Para relatos de dor no ombro ou impacto subacromial: prefira halteres com pegada neutra/semipronada, elevações laterais no plano escapular até 90° e puxadas neutras.
-	5. PERSONALIZAÇÃO POR SEXO BIOLÓGICO: para FEMALE priorize glúteos e membros inferiores, com ao menos 2 dias de pernas quando a frequência permitir, hip thrust, búlgaro inclinado, abdução e trabalho de posterior/quadríceps; superiores devem enfatizar costas/postura, deltoides e tríceps com volume moderado de peitoral. Para MALE, use volume substancial em peitoral, dorsais, deltoides e braços, mantendo pernas completas e pesadas. Para todos: 5 a 7 exercícios, 16 a 24 séries diárias, RIR 1-2 e descansos de 90-150s em multiarticulares e 60-90s em isoladores.
-	6. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
+5. PERSONALIZAÇÃO POR SEXO BIOLÓGICO: para FEMALE priorize glúteos e membros inferiores, com ao menos 2 dias de pernas quando a frequência permitir, hip thrust, búlgaro inclinado, abdução e trabalho de posterior/quadríceps; superiores devem enfatizar costas/postura, deltoides e tríceps com volume moderado de peitoral. Para MALE, use volume substancial em peitoral, dorsais, deltoides e braços, mantendo pernas completas e pesadas. Para todos: 5 a 7 exercícios, 16 a 24 séries diárias, RIR 1-2 e descansos de 90-150s em multiarticulares e 60-90s em isoladores.
+6. VARIABILIDADE: Diversifique a escolha dos exercícios em relação a treinos padrão anteriores, utilizando variações válidas biomecanicamente (ex: halteres vs. barra, polias, pegadas e máquinas diferentes), preservando o objetivo e as restrições da anamnese.
+		7. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
 
 SCHEMA JSON RIGOROSO:
 {
@@ -447,7 +449,7 @@ export async function generateWorkoutPlan(
     const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
     const completion = await openai.chat.completions.create({
       model: env.OPENAI_MODEL,
-      temperature: 0.3,
+      temperature: 0.8,
       response_format: { type: 'json_object' },
       messages: [
         {

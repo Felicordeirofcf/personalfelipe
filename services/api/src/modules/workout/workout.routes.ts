@@ -221,6 +221,19 @@ export async function workoutRoutes(app: FastifyInstance) {
     },
   );
 
+  app.delete(
+    '/:id',
+    { preHandler: adminGuard, schema: { tags: ['Treinos'], summary: 'Exclui um plano e seus exercícios' } },
+    async (request, reply) => {
+      const parsed = ParamsSchema.safeParse(request.params);
+      if (!parsed.success) return reply.badRequest('Identificador de treino inválido.');
+      const current = await prisma.workoutPlan.findUnique({ where: { id: parsed.data.id }, select: { id: true } });
+      if (!current) return reply.notFound('Treino não encontrado.');
+      await prisma.workoutPlan.delete({ where: { id: current.id } });
+      return reply.status(204).send();
+    },
+  );
+
   app.patch(
     '/:id/approve',
     {

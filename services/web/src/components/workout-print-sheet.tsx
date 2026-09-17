@@ -20,7 +20,7 @@ export function WorkoutPrintSheet({ workout, profile }: { workout: Workout; prof
   const objective = profile?.goal ?? 'Treino individualizado com progressão planejada';
 
   return (
-    <section className="print-only workout-print-document" aria-label="Ficha de treino para impressão">
+    <section id="printable-workout-sheet" className="print-only workout-print-document" aria-label="Ficha de treino para impressão">
       <header className="print-brand-header">
         <div className="print-brand-lockup">
           <span className="print-brand-mark" aria-hidden="true">CF</span>
@@ -73,7 +73,7 @@ export function WorkoutPrintSheet({ workout, profile }: { workout: Workout; prof
                     <td>
                       <div className="print-exercise-name"><span>{String(exerciseIndex + 1).padStart(2, '0')}</span><strong>{exercise.name}</strong></div>
                       <p className="print-exercise-note">{exercise.notes || 'Execução controlada, amplitude confortável e técnica estável.'}</p>
-                      {exercise.videoUrl ? <a href={exercise.videoUrl} target="_blank" rel="noreferrer" className="print-video-link">Ver vídeo de execução</a> : null}
+                      {exercise.videoUrl ? <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer" className="print-video-link">Ver vídeo de execução</a> : null}
                     </td>
                     <td>
                       <div className="print-prescription-badges">
