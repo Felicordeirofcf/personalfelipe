@@ -10,6 +10,7 @@ const EnvSchema = z.object({
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   API_PUBLIC_URL: z.string().url().optional(),
   MERCADO_PAGO_ACCESS_TOKEN: z.string().optional().default('mock_token'),
+  MP_ACCESS_TOKEN: z.string().optional(),
   MERCADO_PAGO_WEBHOOK_SECRET: z.string().optional().default('mock_secret'),
   WHATSAPP_API_URL: z.string().url().optional().default('http://localhost:8080'),
   WHATSAPP_API_KEY: z.string().optional().default('mock_key'),

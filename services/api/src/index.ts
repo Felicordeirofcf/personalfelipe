@@ -10,7 +10,7 @@ import { adminWorkoutRoutes } from './modules/admin/admin-workout.routes';
 import { anamnesisRoutes } from './modules/anamnesis/anamnesis.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { adminCheckInRoutes, studentCheckInRoutes } from './modules/checkin/checkin.routes';
-import { mercadoPagoRoutes } from './modules/payments/mercadopago.routes';
+import { mercadoPagoRoutes, paymentRoutes } from './modules/payments/mercadopago.routes';
 import { studentWorkoutRoutes } from './modules/student/student.routes';
 import { userRoutes } from './modules/users/user.routes';
 import { workoutRoutes } from './modules/workout/workout.routes';
@@ -155,6 +155,7 @@ export async function buildServer() {
   await app.register(adminWorkoutRoutes, { prefix: '/api/admin' });
   await app.register(adminCheckInRoutes, { prefix: '/api/admin' });
   await app.register(mercadoPagoRoutes, { prefix: '/api/webhooks' });
+  await app.register(paymentRoutes, { prefix: '/api/payments' });
   await app.register(commercialRoutes, { prefix: '/api' });
 
   app.setErrorHandler((error, request, reply) => {

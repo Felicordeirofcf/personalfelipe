@@ -71,7 +71,8 @@ export async function mercadoPagoRoutes(app: FastifyInstance) {
       await prisma.payment.create({ data: { userId: user.id, status: 'pending', amount: 40 } });
       return reply.send({ initPoint: `${origin}/anamnese?payment=pending&mock=1` });
     }
-    const response = await fetch('https://api.mercadopago.com/checkout/preferences', { method: 'POST', headers: { Authorization: `Bearer ${env.MERCADO_PAGO_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(preferencePayload) });
+    const accessToken = env.MP_ACCESS_TOKEN ?? env.MERCADO_PAGO_ACCESS_TOKEN;
+    const response = await fetch('https://api.mercadopago.com/checkout/preferences', { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(preferencePayload) });
     if (!response.ok) return reply.status(502).send({ error: 'Não foi possível criar o checkout Mercado Pago.' });
     const preference = await response.json() as { id: string; init_point?: string; sandbox_init_point?: string };
     await prisma.payment.create({ data: { userId: user.id, mpPreferenceId: preference.id, status: 'pending', amount: 40 } });
@@ -153,3 +154,5 @@ export async function mercadoPagoRoutes(app: FastifyInstance) {
     },
   );
 }
+
+export const paymentRoutes = mercadoPagoRoutes;
