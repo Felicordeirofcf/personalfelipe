@@ -3,11 +3,11 @@ import { HTMLAttributes, ReactNode } from 'react';
 
 export function PageIntro({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
   return (
-    <div className="mb-9 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+    <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
       <div className="max-w-3xl">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-emerald-400">{eyebrow}</p>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-white md:text-4xl">{title}</h1>
-        <p className="mt-4 max-w-2xl text-sm font-normal leading-7 text-zinc-400 md:text-base">{description}</p>
+        <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.22em] text-emerald-400">{eyebrow}</p>
+        <h1 className="font-display text-3xl font-bold tracking-[-0.035em] text-white md:text-5xl">{title}</h1>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-white/60">{description}</p>
       </div>
       {action}
     </div>
@@ -15,29 +15,29 @@ export function PageIntro({ eyebrow, title, description, action }: { eyebrow: st
 }
 
 export function Panel({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-3xl border border-zinc-800/80 bg-[#111622] shadow-xl shadow-black/30 ${className}`} {...props} />;
+  return <div className={`rounded-[1.75rem] border border-zinc-800 bg-[#131B2E] shadow-soft ${className}`} {...props} />;
 }
 
 export function StatusBadge({ status }: { status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED' | 'PENDING' }) {
   const styles = {
-    DRAFT: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
-    ACTIVE: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-    ARCHIVED: 'border-zinc-700 bg-zinc-900 text-zinc-400',
-    PENDING: 'border-violet-500/30 bg-violet-500/10 text-violet-300',
+    DRAFT: 'bg-amber-100 text-amber-800',
+    ACTIVE: 'bg-emerald-100 text-emerald-800',
+    ARCHIVED: 'bg-slate-100 text-slate-600',
+    PENDING: 'bg-violet-100 text-violet-800',
   } as const;
   const labels = { DRAFT: 'Rascunho', ACTIVE: 'Ativo', ARCHIVED: 'Arquivado', PENDING: 'Pendente' };
-  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${styles[status]}`}>{labels[status]}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${styles[status]}`}>{labels[status]}</span>;
 }
 
 export function Button({ children, loading, variant = 'primary', className = '', ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean; variant?: 'primary' | 'dark' | 'ghost' | 'danger' }) {
   const styles = {
-    primary: 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400 shadow-emerald-500/25',
+    primary: 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400 shadow-emerald-500/20',
     dark: 'bg-zinc-800 text-white hover:bg-zinc-700 shadow-black/20',
-    ghost: 'border border-zinc-700 bg-zinc-900/70 text-zinc-200 hover:border-emerald-500/60 hover:text-white',
-    danger: 'border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20',
+    ghost: 'border border-zinc-800 bg-white text-white hover:bg-sand',
+    danger: 'bg-red-950/40 text-red-300 hover:bg-red-900/60',
   };
   return (
-    <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg transition duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 ${styles[variant]} ${className}`} disabled={loading || props.disabled} {...props}>
+    <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 ${styles[variant]} ${className}`} disabled={loading || props.disabled} {...props}>
       {loading ? <LoaderCircle size={17} className="animate-spin" /> : null}
       {children}
     </button>
@@ -46,9 +46,9 @@ export function Button({ children, loading, variant = 'primary', className = '',
 
 export function Notice({ kind = 'info', children }: { kind?: 'info' | 'success' | 'error'; children: ReactNode }) {
   const styles = {
-    info: 'border-sky-500/30 bg-sky-500/10 text-sky-200',
-    success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
-    error: 'border-red-500/30 bg-red-500/10 text-red-200',
+    info: 'border-blue-200 bg-blue-50 text-blue-800',
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    error: 'border-red-200 bg-red-50 text-red-800',
   };
   return <div role="status" className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${styles[kind]}`}>{children}</div>;
 }

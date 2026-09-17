@@ -24,6 +24,7 @@ export async function anamnesisRoutes(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
+      await request.jwtVerify();
       const parsed = CreateAnamnesisSchema.safeParse(request.body);
       if (!parsed.success) {
         return reply.status(400).send({
@@ -38,6 +39,10 @@ export async function anamnesisRoutes(app: FastifyInstance) {
       });
       if (!student) {
         return reply.notFound('Aluno não encontrado.');
+      }
+
+      if (request.user.role === 'STUDENT' && request.user.sub !== parsed.data.userId) {
+        return reply.forbidden('Você só pode enviar a sua própria avaliação.');
       }
 
       const anamnesis = await prisma.anamnesis.create({

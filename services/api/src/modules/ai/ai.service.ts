@@ -84,7 +84,7 @@ function exercise(
 function buildFemaleMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
   const gym = normalize(anamnesis.availableEquip).includes('academia');
   const leg = (name: string, focus: string, items: ExerciseInput[]): SplitInput => ({ name, focus, exercises: items });
-  const lowerA = leg('Dia 1 - Glúteos e Posterior', 'Prioridade em cadeia posterior', [
+  const lowerA = leg('Dia 1 - Glúteos e Posterior', 'Ênfase em glúteos e cadeia posterior', [
     exercise(gym ? 'Hip thrust com barra' : 'Elevação pélvica', 4, '8-12', 1, 150, '2-1-1-1'),
     exercise(gym ? 'Búlgaro com tronco inclinado' : 'Afundo búlgaro', 3, '8-12', 2, 120, '3-0-1-0'),
     exercise(gym ? 'Stiff/RDL com barra' : 'Stiff unilateral', 4, '8-10', 2, 120, '3-1-1-0'),
@@ -107,7 +107,7 @@ function buildFemaleMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanI
   ]);
   const templates = [lowerA, upper, lowerB];
   const splits = Array.from({ length: Math.min(Math.max(anamnesis.weeklyDays, 1), 6) }, (_, index) => templates[index % templates.length]);
-  return WorkoutPlanSchema.parse({ splits, rationale: `Template feminino com prioridade em cadeia posterior e membros inferiores para ${anamnesis.user.name}; costas, ombros e tríceps recebem volume moderado. RIR 1-2 e descansos de 60-150 segundos.` });
+  return WorkoutPlanSchema.parse({ splits, rationale: `Template feminino com ênfase em glúteos e membros inferiores para ${anamnesis.user.name}; costas, ombros e tríceps recebem volume moderado. RIR 1-2 e descansos de 60-150 segundos.` });
 }
 
 function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {

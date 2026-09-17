@@ -69,6 +69,11 @@ async function buildServer() {
         return true;
       }
 
+      // Túneis Cloudflare usados para publicar a API temporariamente
+      if (url.protocol === 'https:' && hostname.endsWith('.trycloudflare.com')) {
+        return true;
+      }
+
       return false;
     } catch {
       return false;

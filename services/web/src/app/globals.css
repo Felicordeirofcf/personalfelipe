@@ -5,16 +5,15 @@
 :root { color-scheme: dark; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: radial-gradient(circle at 8% -10%, rgba(16,185,129,.12), transparent 34rem), radial-gradient(circle at 100% 18%, rgba(20,184,166,.06), transparent 30rem), #070A0F; color: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; background: radial-gradient(circle at 8% -10%, rgba(16,185,129,.12), transparent 34rem), radial-gradient(circle at 100% 18%, rgba(20,184,166,.06), transparent 30rem), #090D14; color: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
 h1,h2,h3,.font-display { font-family: "Trebuchet MS", Inter, ui-sans-serif, system-ui, sans-serif; }
 ::selection { background: #10B981; color: #06110e; }
 input,select,textarea { outline: none; }
-input:focus,select:focus,textarea:focus { border-color: #10B981 !important; box-shadow: 0 0 0 3px rgba(16,185,129,.16) !important; }
-input[type='range'] { accent-color: #10B981; }
+input:focus,select:focus,textarea:focus { border-color: #10B981 !important; box-shadow: 0 0 0 4px rgba(16,185,129,.14) !important; }
 .print-only { display: none; }
 @media print { @page { size: A4; margin: 12mm; } body { background: white !important; color: #111 !important; font-size: 10pt; } header,.screen-only { display: none !important; } .print-only { display: block !important; } .print-sheet { width: 100%; } .print-split { break-inside: avoid; margin: 0 0 8mm; } .print-table { width: 100%; border-collapse: collapse; margin-top: 3mm; } .print-table th,.print-table td { border: 1px solid #cbd5cf; padding: 2.2mm; text-align: left; vertical-align: top; } }
 @layer components {
-  .field-label { @apply mb-2 block text-sm font-semibold text-zinc-200; }
-  .field-control { @apply w-full rounded-xl border border-zinc-700/80 bg-[#0B0F17] px-4 py-3.5 text-sm font-medium text-white placeholder:text-zinc-500 transition; }
+  .field-label { @apply mb-2 block text-sm font-medium text-zinc-200; }
+  .field-control { @apply w-full rounded-xl border border-zinc-700/80 bg-zinc-900/90 px-4 py-3 text-sm font-medium text-white placeholder:text-zinc-500 transition; }
   .grid-texture { background-image: linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size: 28px 28px; }
 }
