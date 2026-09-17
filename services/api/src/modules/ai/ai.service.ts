@@ -21,6 +21,43 @@ export type AnamnesisForGeneration = {
 
 export type GenerationMode = 'mock' | 'openai';
 
+const TRAINING_METHODOLOGIES = [
+  { name: 'Push / Pull / Legs (Hipertrofia Clássica Periodizada)', description: 'Empurrar, puxar e membros inferiores, com sobrecarga progressiva e 6-10 repetições em compostos e 10-15 em isoladores.' },
+  { name: 'Upper / Lower (Alta Frequência)', description: 'Alternância de membros superiores e inferiores, com densidade de treino e controle rigoroso de RIR.' },
+  { name: 'FST-7 (Finalizador Metabólico)', description: 'Bases pesadas seguidas de finalizadores com maior densidade, 10-12 repetições e descansos curtos quando forem seguros.' },
+  { name: 'Heavy Duty / Alta Intensidade', description: 'Baixo volume de séries efetivas, alta intensidade próxima da falha técnica e excêntrica controlada.' },
+  { name: 'Periodização Ondulatória Diária (DUP)', description: 'Alternância semanal entre força tensional, hipertrofia e estresse metabólico.' },
+  { name: 'Antagonista / Agonista (Supersets)', description: 'Combinação de grupos opostos, como peito e costas ou bíceps e tríceps, para eficiência neuromuscular.' },
+] as const;
+
+type TrainingMethodology = (typeof TRAINING_METHODOLOGIES)[number];
+
+function selectTrainingMethodology(): TrainingMethodology {
+  return TRAINING_METHODOLOGIES[Math.floor(Math.random() * TRAINING_METHODOLOGIES.length)] ?? TRAINING_METHODOLOGIES[0];
+}
+
+function applyMethodologyToMock(plan: WorkoutPlanInput, methodology: TrainingMethodology): WorkoutPlanInput {
+  const labels = methodology.name.startsWith('Upper / Lower')
+    ? ['Upper A — Empurrar e Tracionar', 'Lower A — Quadríceps e Posterior', 'Upper B — Costas e Braços', 'Lower B — Glúteos e Membros Inferiores']
+    : methodology.name.startsWith('Antagonista')
+      ? ['Peito + Costas — Superset Antagonista', 'Quadríceps + Posterior — Superset', 'Bíceps + Tríceps — Superset', 'Ombros + Core — Eficiência']
+      : methodology.name.startsWith('Periodização')
+        ? ['Força — Baixas Repetições', 'Hipertrofia — Tensão Mecânica', 'Metabólico — Alto Volume', 'Força Técnica — Variações']
+        : methodology.name.startsWith('Heavy Duty')
+          ? ['Alta Intensidade — Peito e Costas', 'Alta Intensidade — Pernas', 'Alta Intensidade — Ombros e Braços']
+          : methodology.name.startsWith('FST-7')
+            ? ['Base + FST-7 — Peito', 'Base + FST-7 — Costas', 'Base + FST-7 — Pernas', 'Base + FST-7 — Ombros']
+            : ['Push — Empurrar', 'Pull — Tracionar', 'Legs — Membros Inferiores'];
+  return {
+    ...plan,
+    splits: plan.splits.map((split, index) => ({
+      ...split,
+      name: labels[index % labels.length] ?? split.name,
+      focus: `${split.focus} | Método: ${methodology.name}`.slice(0, 160),
+    })),
+  };
+}
+
 export class AiGenerationError extends Error {
   constructor(message: string, public readonly details?: unknown) {
     super(message);
@@ -375,7 +412,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
   });
 }
 
-function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration, excludedExercises: string[]) {
+function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration, excludedExercises: string[], methodology: TrainingMethodology) {
   const payload = {
     studentName: anamnesis.user.name,
     goal: anamnesis.goal,
@@ -385,10 +422,16 @@ function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration, excludedExercis
     injuries: anamnesis.injuries,
     availableEquipment: anamnesis.availableEquip,
     excludedExercises,
+    methodology: methodology.name,
   };
 
-  return `Você é um Personal Trainer de elite e fisiologista do exercício registrado no CREF.
+  return `Você é um Fisiologista do Exercício e Treinador de Força de Elite, especialista em biomecânica, periodização e segurança clínica.
 Sua missão é estruturar um plano de treinamento completo, profissional, contemporâneo e 100% aplicável em academia comercial.
+
+METODOLOGIA OBRIGATÓRIA DESTA PRESCRIÇÃO:
+${methodology.name}
+Diretriz de aplicação: ${methodology.description}
+Não use automaticamente a divisão Peito/Tríceps tradicional se ela não for coerente com esta metodologia.
 
 DIRETRIZES TÉCNICAS E METODOLÓGICAS:
 1. VOLUME E SELEÇÃO DE EXERCÍCIOS POR SESSÃO:
@@ -409,7 +452,7 @@ DIRETRIZES TÉCNICAS E METODOLÓGICAS:
 	   - Para relatos de dor no ombro ou impacto subacromial: prefira halteres com pegada neutra/semipronada, elevações laterais no plano escapular até 90° e puxadas neutras.
 5. PERSONALIZAÇÃO POR SEXO BIOLÓGICO: para FEMALE priorize glúteos e membros inferiores, com ao menos 2 dias de pernas quando a frequência permitir, hip thrust, búlgaro inclinado, abdução e trabalho de posterior/quadríceps; superiores devem enfatizar costas/postura, deltoides e tríceps com volume moderado de peitoral. Para MALE, use volume substancial em peitoral, dorsais, deltoides e braços, mantendo pernas completas e pesadas. Para todos: 5 a 7 exercícios, 16 a 24 séries diárias, RIR 1-2 e descansos de 90-150s em multiarticulares e 60-90s em isoladores.
 6. VARIABILIDADE: Diversifique a escolha dos exercícios em relação a treinos padrão anteriores, utilizando variações válidas biomecanicamente (ex: halteres vs. barra, polias, pegadas e máquinas diferentes), preservando o objetivo e as restrições da anamnese. Não repita os exercícios da lista EXERCÍCIOS A EVITAR quando houver alternativa segura.
-		7. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
+   7. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível), organizados de acordo com a metodologia selecionada.
 
 SCHEMA JSON RIGOROSO:
 {
@@ -426,7 +469,7 @@ SCHEMA JSON RIGOROSO:
       "notes": "Banco em 30°. Controlar a descida sentindo alongar a porção clavicular."
     }]
   }],
-  "rationale": "Explicação detalhada da divisão, escolhas biomecânicas e controle do volume de séries semanais."
+  "rationale": "Explique a metodologia ${methodology.name}, as escolhas biomecânicas e o controle do volume de séries semanais."
 }
 
 DADOS DA ANAMNESE:
@@ -440,9 +483,14 @@ export async function generateWorkoutPlan(
   excludedExercises: string[] = [],
 ): Promise<{ plan: WorkoutPlanInput; mode: GenerationMode }> {
   const shouldMock = !env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim().toLowerCase() === 'mock';
+  const methodology = selectTrainingMethodology();
 
   if (shouldMock) {
-    const plan = attachExerciseVideos(buildMockWorkout(anamnesis));
+    const basePlan = applyMethodologyToMock(buildMockWorkout(anamnesis), methodology);
+    const plan = attachExerciseVideos({
+      ...basePlan,
+      rationale: `${basePlan.rationale} Metodologia deste ciclo: ${methodology.name} — ${methodology.description}`,
+    });
     assertBiomechanicalSafety(plan, anamnesis.injuries);
     return { plan, mode: 'mock' };
   }
@@ -457,9 +505,9 @@ export async function generateWorkoutPlan(
         {
           role: 'system',
           content:
-            'Você é um Personal Trainer especialista em hipertrofia, biomecânica e prescrição prática de musculação. Gere treinos completos, com 5 a 7 exercícios por dia e descansos reais de academia.',
+            `Você é um Fisiologista do Exercício e Treinador de Força de Elite. Aplique obrigatoriamente a metodologia selecionada, respeite a anamnese e retorne exclusivamente JSON válido. Metodologia: ${methodology.name}. Diretriz: ${methodology.description}`,
         },
-        { role: 'user', content: `${buildTechnicalPrompt(anamnesis, excludedExercises)}\nEXERCÍCIOS A EVITAR: ${JSON.stringify(excludedExercises)}` },
+        { role: 'user', content: `${buildTechnicalPrompt(anamnesis, excludedExercises, methodology)}\nEXERCÍCIOS A EVITAR: ${JSON.stringify(excludedExercises)}` },
       ],
     });
 
