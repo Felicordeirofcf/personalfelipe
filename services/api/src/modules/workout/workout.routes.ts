@@ -9,7 +9,7 @@ import { sendWorkoutApprovedWhatsApp } from '../notifications/whatsapp.service';
 import { getActiveWorkoutForStudent } from './workout.service';
 import { toWorkoutView, workoutInclude } from './workout.view';
 
-const GenerateWorkoutSchema = z.object({ anamnesisId: z.string().trim().min(1) }).strict();
+const GenerateWorkoutSchema = z.object({ anamnesisId: z.string().trim().min(1), excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional() }).strict();
 const ParamsSchema = z.object({ id: z.string().trim().min(1) });
 const StudentParamsSchema = z.object({ userId: z.string().trim().min(1) });
 const ListQuerySchema = z.object({
@@ -21,8 +21,8 @@ const WorkoutLogSchema = z
     userId: z.string().trim().min(1),
     exercise: z.string().trim().min(2).max(120),
     setNumber: z.number().int().min(1).max(20),
-    weightUsed: z.number().min(0).max(2000),
-    repsDone: z.number().int().min(0).max(1000),
+    weightUsed: z.number().min(0).max(2000).nullable().optional(),
+    repsDone: z.number().int().min(0).max(1000).nullable().optional(),
     rpe: z.number().min(0).max(10).optional(),
   })
   .strict();
@@ -83,7 +83,7 @@ export async function workoutRoutes(app: FastifyInstance) {
       }
 
       try {
-        const { plan, mode } = await generateWorkoutPlan(anamnesis);
+        const { plan, mode } = await generateWorkoutPlan(anamnesis, parsed.data.excludeExerciseNames ?? []);
         const saved = await prisma.$transaction(async (tx) => {
           await tx.workoutPlan.updateMany({
             where: { userId: anamnesis.userId, status: 'DRAFT' },
@@ -295,7 +295,7 @@ export async function workoutRoutes(app: FastifyInstance) {
         return reply.notFound('Exercício não encontrado no treino ativo do aluno.');
       }
 
-      const log = await prisma.workoutLog.create({ data: parsed.data });
+      const log = await prisma.workoutLog.create({ data: { ...parsed.data, weightUsed: parsed.data.weightUsed ?? 0, repsDone: parsed.data.repsDone ?? 0 } });
       return reply.status(201).send({
         log: {
           id: log.id,

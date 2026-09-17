@@ -89,6 +89,11 @@ export async function buildServer() {
     reply.header('Vary', 'Origin');
   };
 
+  // Última barreira para erros de autenticação, validação, rotas e exceções inesperadas.
+  app.addHook('onSend', async (request, reply) => {
+    applyCorsHeaders(request.headers.origin, reply);
+  });
+
   await app.register(cors, {
     origin: (origin, callback) => {
       const allowed = isOriginAllowed(origin);

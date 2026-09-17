@@ -375,7 +375,7 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
   });
 }
 
-function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration) {
+function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration, excludedExercises: string[]) {
   const payload = {
     studentName: anamnesis.user.name,
     goal: anamnesis.goal,
@@ -384,6 +384,7 @@ function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration) {
     weeklyDays: anamnesis.weeklyDays,
     injuries: anamnesis.injuries,
     availableEquipment: anamnesis.availableEquip,
+    excludedExercises,
   };
 
   return `Você é um Personal Trainer de elite e fisiologista do exercício registrado no CREF.
@@ -407,7 +408,7 @@ DIRETRIZES TÉCNICAS E METODOLÓGICAS:
    - Proíba desenvolvimento por trás do pescoço ou puxadas atrás da nuca sob qualquer hipótese.
 	   - Para relatos de dor no ombro ou impacto subacromial: prefira halteres com pegada neutra/semipronada, elevações laterais no plano escapular até 90° e puxadas neutras.
 5. PERSONALIZAÇÃO POR SEXO BIOLÓGICO: para FEMALE priorize glúteos e membros inferiores, com ao menos 2 dias de pernas quando a frequência permitir, hip thrust, búlgaro inclinado, abdução e trabalho de posterior/quadríceps; superiores devem enfatizar costas/postura, deltoides e tríceps com volume moderado de peitoral. Para MALE, use volume substancial em peitoral, dorsais, deltoides e braços, mantendo pernas completas e pesadas. Para todos: 5 a 7 exercícios, 16 a 24 séries diárias, RIR 1-2 e descansos de 90-150s em multiarticulares e 60-90s em isoladores.
-6. VARIABILIDADE: Diversifique a escolha dos exercícios em relação a treinos padrão anteriores, utilizando variações válidas biomecanicamente (ex: halteres vs. barra, polias, pegadas e máquinas diferentes), preservando o objetivo e as restrições da anamnese.
+6. VARIABILIDADE: Diversifique a escolha dos exercícios em relação a treinos padrão anteriores, utilizando variações válidas biomecanicamente (ex: halteres vs. barra, polias, pegadas e máquinas diferentes), preservando o objetivo e as restrições da anamnese. Não repita os exercícios da lista EXERCÍCIOS A EVITAR quando houver alternativa segura.
 		7. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
 
 SCHEMA JSON RIGOROSO:
@@ -436,6 +437,7 @@ Retorne SOMENTE o JSON válido preenchido, sem formatações Markdown ou explica
 
 export async function generateWorkoutPlan(
   anamnesis: AnamnesisForGeneration,
+  excludedExercises: string[] = [],
 ): Promise<{ plan: WorkoutPlanInput; mode: GenerationMode }> {
   const shouldMock = !env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim().toLowerCase() === 'mock';
 
@@ -449,7 +451,7 @@ export async function generateWorkoutPlan(
     const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
     const completion = await openai.chat.completions.create({
       model: env.OPENAI_MODEL,
-      temperature: 0.8,
+      temperature: 0.9,
       response_format: { type: 'json_object' },
       messages: [
         {
@@ -457,7 +459,7 @@ export async function generateWorkoutPlan(
           content:
             'Você é um Personal Trainer especialista em hipertrofia, biomecânica e prescrição prática de musculação. Gere treinos completos, com 5 a 7 exercícios por dia e descansos reais de academia.',
         },
-        { role: 'user', content: buildTechnicalPrompt(anamnesis) },
+        { role: 'user', content: `${buildTechnicalPrompt(anamnesis, excludedExercises)}\nEXERCÍCIOS A EVITAR: ${JSON.stringify(excludedExercises)}` },
       ],
     });
 

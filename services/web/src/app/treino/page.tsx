@@ -98,10 +98,7 @@ export default function TreinoPage() {
   async function saveSet(exerciseName: string, setNumber: number) {
     const entryKey = key(exerciseName, setNumber);
     const entry = entries[entryKey];
-    if (!entry || entry.weightUsed === '' || entry.repsDone === '') {
-      setMessage({ kind: 'error', text: 'Informe carga e repetições antes de concluir a série.' });
-      return;
-    }
+    if (!entry) return;
     updateEntry(exerciseName, setNumber, 'saving', true);
     try {
       const response = await apiFetch<{ log: WorkoutLog }>('/workouts/log', {
@@ -110,8 +107,8 @@ export default function TreinoPage() {
           userId: studentId,
           exercise: exerciseName,
           setNumber,
-          weightUsed: Number(entry.weightUsed),
-          repsDone: Number(entry.repsDone),
+          weightUsed: entry.weightUsed === '' ? null : Number(entry.weightUsed),
+          repsDone: entry.repsDone === '' ? null : Number(entry.repsDone),
           ...(entry.rpe !== '' ? { rpe: Number(entry.rpe) } : {}),
         }),
       });
@@ -142,6 +139,18 @@ export default function TreinoPage() {
     }
   }
 
+  async function completeWorkout() {
+    if (!currentSplit) return;
+    try {
+      await Promise.all(currentSplit.exercises.flatMap((exercise) => Array.from({ length: exercise.sets }, (_, index) => apiFetch('/workouts/log', {
+        method: 'POST',
+        body: JSON.stringify({ userId: studentId, exercise: exercise.name, setNumber: index + 1, weightUsed: null, repsDone: null }),
+      }))));
+      setMessage({ kind: 'success', text: `${currentSplit.name} concluído sem exigir o preenchimento de cargas.` });
+      setEntries((current) => ({ ...current, ...Object.fromEntries(currentSplit.exercises.flatMap((exercise) => Array.from({ length: exercise.sets }, (_, index) => [key(exercise.name, index + 1), { weightUsed: '', repsDone: '', rpe: '', saved: true } as SetEntry])))}));
+    } catch (error) { setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Não foi possível concluir o treino.' }); }
+  }
+
   const activeVideo = video ? videoSource(video.url) : null;
 
   return (
@@ -170,6 +179,7 @@ export default function TreinoPage() {
                 <div className="grid-texture bg-zinc-950 p-6 text-white md:p-8">
                   <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
                     <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-emerald-300">{currentSplit.name}</p><h2 className="mt-2 font-display text-3xl font-bold">{currentSplit.focus}</h2><div className="mt-5 flex flex-wrap gap-3 text-xs font-bold text-white/60"><span className="inline-flex items-center gap-1.5"><Layers3 size={15} /> {currentSplit.exercises.length} exercícios</span><span className="inline-flex items-center gap-1.5"><Target size={15} /> {totalSets} séries</span></div></div>
+                    <Button variant="primary" onClick={completeWorkout}>Concluir Treino Completo</Button>
                     <div className="w-full rounded-2xl border border-white/15 bg-white/10 p-4 md:w-48"><div className="flex items-center justify-between text-xs font-bold"><span>Progresso</span><span className="text-emerald-300">{progress}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${progress}%` }} /></div></div>
                   </div>
                 </div>

@@ -22,6 +22,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentFilter, setStudentFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE'>('ALL');
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -72,7 +74,7 @@ export default function AdminPage() {
     try {
       const response = await apiFetch<{ workout: Workout; generationMode: 'mock' | 'openai' }>('/workouts/generate', {
         method: 'POST',
-        body: JSON.stringify({ anamnesisId }),
+        body: JSON.stringify({ anamnesisId, excludeExerciseNames: workouts.filter((item) => item.userId === anamneses.find((entry) => entry.id === anamnesisId)?.user.id).flatMap((item) => item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))) }),
       });
       setWorkouts((current) => [response.workout, ...current.filter((item) => item.id !== response.workout.id)]);
       setSelectedWorkout(response.workout);
@@ -84,6 +86,13 @@ export default function AdminPage() {
       setGeneratingId(null);
     }
   }
+
+  const visibleAnamneses = anamneses.filter((item) => {
+    const query = studentSearch.trim().toLowerCase();
+    const matchesSearch = !query || item.user.name.toLowerCase().includes(query) || item.user.email.toLowerCase().includes(query);
+    const matchesFilter = studentFilter === 'ALL' || (studentFilter === 'PENDING' ? item.pending : item.latestPlan?.status === 'ACTIVE');
+    return matchesSearch && matchesFilter;
+  });
 
   function handleWorkoutChange(updated: Workout) {
     setSelectedWorkout(updated);
@@ -138,11 +147,13 @@ export default function AdminPage() {
             <div className="border-b border-zinc-800 px-5 py-4">
               <div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold text-white">Fila de avaliações</h2><span className="rounded-full bg-zinc-950 px-2.5 py-1 text-[10px] font-black text-emerald-300">{anamneses.length}</span></div>
               <p className="mt-1 text-xs text-zinc-400">Mais recentes primeiro</p>
+              <input className="field-control mt-4" placeholder="Buscar aluno..." value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} />
+              <div className="mt-3 flex gap-2"><button type="button" onClick={() => setStudentFilter('ALL')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ALL' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Todos</button><button type="button" onClick={() => setStudentFilter('PENDING')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'PENDING' ? 'bg-amber-400 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Pendentes</button><button type="button" onClick={() => setStudentFilter('ACTIVE')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ACTIVE' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Liberados</button></div>
             </div>
             <div className="max-h-[580px] space-y-3 overflow-y-auto p-3">
               {loading ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Carregando avaliações...</p> : null}
               {!loading && anamneses.length === 0 ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Nenhuma anamnese cadastrada.</p> : null}
-              {anamneses.map((item) => (
+              {visibleAnamneses.map((item) => (
                 <article key={item.id} role="button" tabIndex={0} onClick={() => router.push(`/admin/aluno/${item.user.id}`)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') router.push(`/admin/aluno/${item.user.id}`); }} className={`cursor-pointer rounded-2xl border p-4 transition hover:border-emerald-400/50 ${item.pending ? 'border-emerald-400/40 bg-emerald-950/20' : 'border-zinc-800 bg-zinc-900/60'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div><p className="font-display font-bold text-white">{item.user.name}</p><p className="mt-1 text-xs font-semibold text-zinc-400">{experienceLabels[item.experience]}</p></div>
