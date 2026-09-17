@@ -16,5 +16,4 @@ input:focus,select:focus,textarea:focus { border-color: #10B981 !important; box-
   .field-label { @apply mb-2 block text-sm font-extrabold text-slate-300; }
   .field-control { @apply w-full rounded-xl border border-slate-700 bg-[#131B2E] px-4 py-3 text-sm text-white placeholder:text-slate-500 transition; }
   .grid-texture { background-image: linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size: 28px 28px; }
-  .bg-white { background-color: #131B2E !important; }
 }

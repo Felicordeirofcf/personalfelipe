@@ -6,7 +6,7 @@ import { env } from '../../lib/env';
 import { hashPassword, normalizeCpf, verifyPassword } from '../../lib/password';
 
 const CredentialsSchema = z.object({ email: z.string().email().transform((value) => value.trim().toLowerCase()), password: z.string().min(8).max(128) }).strict();
-const RegisterSchema = CredentialsSchema.extend({ name: z.string().trim().min(3).max(120), cpf: z.string().min(11).max(18), gender: z.enum(['MALE', 'FEMALE']) }).strict();
+const RegisterSchema = CredentialsSchema.extend({ name: z.string().trim().min(3).max(120), cpf: z.string().min(11).max(18) }).strict();
 const ChangePasswordSchema = z.object({ currentPassword: z.string().min(8), newPassword: z.string().min(8).max(128) }).strict();
 const ForgotSchema = z.object({ email: z.string().email().transform((value) => value.trim().toLowerCase()) }).strict();
 const ResetSchema = z.object({ token: z.string().min(20), newPassword: z.string().min(8).max(128) }).strict();
@@ -17,10 +17,10 @@ function tokenHash(token: string) { return createHash('sha256').update(token).di
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/register', async (request, reply) => {
-    const parsed = RegisterSchema.safeParse(request.body); if (!parsed.success) return reply.badRequest('Informe nome, e-mail, CPF, sexo e uma senha válida.');
+    const parsed = RegisterSchema.safeParse(request.body); if (!parsed.success) return reply.badRequest('Informe nome, e-mail, CPF e uma senha válida.');
     const cpf = normalizeCpf(parsed.data.cpf); if (cpf.length !== 11) return reply.badRequest('CPF inválido.');
     if (await prisma.user.findFirst({ where: { OR: [{ email: parsed.data.email }, { cpf }] } })) return reply.conflict('Já existe uma conta com este e-mail ou CPF.');
-    const user = await prisma.user.create({ data: { name: parsed.data.name, email: parsed.data.email, cpf, gender: parsed.data.gender, role: 'STUDENT', passwordHash: await hashPassword(parsed.data.password) } });
+    const user = await prisma.user.create({ data: { name: parsed.data.name, email: parsed.data.email, cpf, role: 'STUDENT', passwordHash: await hashPassword(parsed.data.password) } });
     const token = app.jwt.sign({ sub: user.id, email: user.email, role: user.role }, { expiresIn: '12h' }); return reply.status(201).send({ token, user: publicUser(user as PublicUser) });
   });
 

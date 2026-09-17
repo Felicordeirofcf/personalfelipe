@@ -100,8 +100,8 @@ export default function AnamnesePage() {
           <form onSubmit={handleSubmit} className="space-y-9">
             <section>
               <div className="mb-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-lime-700"><ClipboardPlus size={19} /></span>
-                <div><p className="text-xs font-black uppercase tracking-wider text-lime-700">Etapa 01</p><h2 className="font-display text-xl font-bold">Perfil e objetivo</h2></div>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><ClipboardPlus size={19} /></span>
+                <div><p className="text-xs font-black uppercase tracking-wider text-emerald-300">Etapa 01</p><h2 className="font-display text-xl font-bold">Perfil e objetivo</h2></div>
               </div>
               <div className="grid gap-5 md:grid-cols-2">
                 <label>
@@ -122,10 +122,10 @@ export default function AnamnesePage() {
                 <fieldset className="md:col-span-2">
                   <legend className="field-label">Sexo biológico para personalização biomecânica</legend>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    {([{ value: 'FEMALE', label: 'Feminino', description: 'Ênfase em glúteos e membros inferiores' }, { value: 'MALE', label: 'Masculino', description: 'Ênfase equilibrada em tronco e pernas' }] as const).map((option) => (
+                    {([{ value: 'FEMALE', label: 'Feminino' }, { value: 'MALE', label: 'Masculino' }] as const).map((option) => (
                       <label key={option.value} className={`cursor-pointer rounded-2xl border p-4 font-bold transition ${form.gender === option.value ? 'border-emerald-300 bg-emerald-400 text-[#06110e]' : 'border-slate-700 bg-[#131B2E] text-slate-200 hover:border-emerald-400/50'}`}>
                         <input className="sr-only" type="radio" name="gender" value={option.value} checked={form.gender === option.value} onChange={() => setForm({ ...form, gender: option.value })} />
-                        <strong className="block">{option.label}</strong><span className="text-xs text-ink/55">{option.description}</span>
+                        <strong className="block">{option.label}</strong>
                       </label>
                     ))}
                   </div>
@@ -135,27 +135,27 @@ export default function AnamnesePage() {
                   <textarea className="field-control min-h-28 resize-y" value={form.goal} onChange={(event) => setForm({ ...form, goal: event.target.value })} minLength={5} required placeholder="Ex.: ganhar massa muscular, melhorar postura e condicionamento..." />
                 </label>
                 <label className="md:col-span-2">
-                  <span className="field-label">Dias disponíveis por semana: <strong className="text-lime-700">{form.weeklyDays}</strong></span>
+                  <span className="field-label">Dias disponíveis por semana: <strong className="text-emerald-300">{form.weeklyDays}</strong></span>
                   <input type="range" min="1" max="7" value={form.weeklyDays} onChange={(event) => setForm({ ...form, weeklyDays: Number(event.target.value) })} className="w-full accent-lime-600" />
-                  <div className="mt-1 flex justify-between text-xs font-bold text-ink/35"><span>1 dia</span><span>7 dias</span></div>
+                  <div className="mt-1 flex justify-between text-xs font-bold text-slate-500"><span>1 dia</span><span>7 dias</span></div>
                 </label>
               </div>
             </section>
 
-            <div className="h-px bg-ink/10" />
+            <div className="h-px bg-[#0F172A]/10" />
 
             <section>
               <div className="mb-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-100 text-orange-700"><HeartPulse size={19} /></span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-orange-400/10 text-orange-300"><HeartPulse size={19} /></span>
                 <div><p className="text-xs font-black uppercase tracking-wider text-orange-700">Etapa 02</p><h2 className="font-display text-xl font-bold">Restrições e cuidados</h2></div>
               </div>
-              <p className="mb-4 text-sm leading-6 text-ink/55">Selecione tudo que se aplica. A ausência de seleção será registrada como “sem restrições relatadas”.</p>
+              <p className="mb-4 text-sm leading-6 text-slate-400">Selecione tudo que se aplica. A ausência de seleção será registrada como “sem restrições relatadas”.</p>
               <div className="grid gap-3 md:grid-cols-2">
                 {restrictionOptions.map((item) => {
                   const active = form.injuries.includes(item);
                   return (
-                    <button key={item} type="button" onClick={() => toggleRestriction(item)} className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${active ? 'border-lime-500 bg-lime-50 text-lime-800' : 'border-ink/10 bg-white text-ink/65 hover:border-lime-500/50'}`}>
-                      {item}<span className={`grid h-5 w-5 place-items-center rounded-full border ${active ? 'border-lime-600 bg-lime-600 text-white' : 'border-ink/20'}`}>{active ? <Check size={13} /> : null}</span>
+                    <button key={item} type="button" onClick={() => toggleRestriction(item)} className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${active ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200' : 'border-slate-700 bg-[#131B2E] text-slate-300 hover:border-emerald-400/50'}`}>
+                      {item}<span className={`grid h-5 w-5 place-items-center rounded-full border ${active ? 'border-emerald-400 bg-emerald-500 text-white' : 'border-slate-600'}`}>{active ? <Check size={13} /> : null}</span>
                     </button>
                   );
                 })}
@@ -166,14 +166,14 @@ export default function AnamnesePage() {
               </label>
             </section>
 
-            <div className="h-px bg-ink/10" />
+            <div className="h-px bg-[#0F172A]/10" />
 
             <section>
-              <p className="mb-2 text-xs font-black uppercase tracking-wider text-lime-700">Etapa 03</p>
+              <p className="mb-2 text-xs font-black uppercase tracking-wider text-emerald-300">Etapa 03</p>
               <h2 className="font-display text-xl font-bold">Equipamentos disponíveis</h2>
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 {equipmentOptions.map((item) => (
-                  <label key={item} className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold leading-6 transition ${form.availableEquip === item ? 'border-ink bg-ink text-white' : 'border-ink/10 bg-white text-ink/65 hover:border-ink/30'}`}>
+                  <label key={item} className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold leading-6 transition ${form.availableEquip === item ? 'border-slate-700 bg-[#0F172A] text-white' : 'border-slate-700 bg-[#131B2E] text-slate-300 hover:border-slate-700/30'}`}>
                     <input type="radio" name="equipment" className="sr-only" value={item} checked={form.availableEquip === item} onChange={() => setForm({ ...form, availableEquip: item })} />
                     {item}
                   </label>
@@ -187,7 +187,7 @@ export default function AnamnesePage() {
 
             {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
 
-            <div className="flex flex-col-reverse justify-between gap-3 border-t border-ink/10 pt-6 sm:flex-row sm:items-center">
+            <div className="flex flex-col-reverse justify-between gap-3 border-t border-slate-700 pt-6 sm:flex-row sm:items-center">
               <Button type="submit" loading={submitting} disabled={!form.userId} className="sm:min-w-52">
                 Enviar ao personal <ChevronRight size={18} />
               </Button>
@@ -196,7 +196,7 @@ export default function AnamnesePage() {
         </Panel>
 
         <aside className="space-y-5">
-          <Panel className="overflow-hidden !bg-ink p-6 text-white">
+          <Panel className="overflow-hidden !bg-[#0F172A] p-6 text-white">
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-lime-300">Método Felipe Ferreira</p>
             <h3 className="mt-3 font-display text-2xl font-bold">Metodologia Sob Medida</h3>
             <p className="mt-3 text-sm leading-6 text-white/60">Acompanhamento próximo e estratégia de treino desenhada para a sua evolução.</p>
@@ -204,7 +204,7 @@ export default function AnamnesePage() {
               {['Acompanhamento e supervisão direta: Felipe Ferreira (CREF 071550-RJ)', 'Periodização baseada em sobrecarga progressiva e biomecânica aplicada', 'Planilhas personalizadas entregues diretamente no seu painel', 'Suporte para dúvidas e ajustes de carga'].map((item) => <div key={item} className="flex items-center gap-2 text-sm font-bold"><Check size={16} className="text-lime-300" /> {item}</div>)}
             </div>
           </Panel>
-          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-900">
+          <div className="rounded-2xl border border-orange-400/30 bg-orange-400/10 p-5 text-orange-200">
             <div className="flex gap-3"><CircleAlert className="mt-0.5 shrink-0" size={19} /><p className="text-sm leading-6"><strong>Dor não é parâmetro de progresso.</strong> Em caso de sintomas agudos, procure avaliação qualificada antes de iniciar o treino.</p></div>
           </div>
         </aside>
