@@ -360,8 +360,8 @@ function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
   };
 
   const templates = [splitA, splitB, splitC, splitD];
-  const days = Math.min(Math.max(anamnesis.weeklyDays, 1), templates.length);
-  const splits = templates.slice(0, days);
+  const days = Math.min(Math.max(anamnesis.weeklyDays, 1), 7);
+  const splits = Array.from({ length: days }, (_, index) => templates[index % templates.length]);
 
   const restrictionSummary = anamnesis.injuries.length
     ? `Restrições atendidas: ${anamnesis.injuries.join('; ')}.`

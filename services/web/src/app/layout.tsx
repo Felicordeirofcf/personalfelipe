@@ -2,21 +2,6 @@ import type { Metadata } from 'next';
 import { AppHeader } from '@/components/app-header';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: { default: 'ConsultoriaFit', template: '%s | ConsultoriaFit' },
-  description: 'Acompanhamento individualizado e prescrição de treinos com responsabilidade profissional.',
-};
+export const metadata: Metadata = { title: { default: 'ConsultoriaFit', template: '%s | ConsultoriaFit' }, description: 'Consultoria online de elite com periodização individualizada e biomecânica aplicada.' };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="pt-BR">
-      <body>
-        <AppHeader />
-        <main>{children}</main>
-        <footer className="border-t border-ink/10 bg-white px-5 py-10 text-sm text-ink/50">
-          <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-3"><div><p className="font-display text-lg font-bold text-ink">ConsultoriaFit</p><p className="mt-2 max-w-xs leading-6">Treino individualizado para você evoluir com clareza, segurança e constância.</p></div><div><p className="font-extrabold text-ink">Contato</p><a className="mt-2 block hover:text-ink" href="mailto:contato@consultoriafit.com.br">contato@consultoriafit.com.br</a><a className="mt-1 block hover:text-ink" href="https://wa.me/5500000000000">WhatsApp da consultoria</a></div><div><p className="font-extrabold text-ink">Responsabilidade profissional</p><p className="mt-2 leading-6">Personal Trainer responsável · CREF: informe seu registro profissional</p><div className="mt-3 flex gap-4 text-xs font-bold"><a href="#" className="hover:text-ink">Termos de uso</a><a href="#" className="hover:text-ink">Privacidade</a></div></div></div><p className="mx-auto mt-9 max-w-7xl border-t border-ink/10 pt-5 text-xs">© {new Date().getFullYear()} ConsultoriaFit. A prescrição não substitui avaliação médica ou fisioterapêutica.</p>
-        </footer>
-      </body>
-    </html>
-  );
-}
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="pt-BR"><body><AppHeader /><main>{children}</main><footer className="border-t border-slate-800 bg-[#090D14] px-5 py-10 text-sm text-slate-500"><div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-3"><div><p className="font-display text-lg font-bold text-white">ConsultoriaFit</p><p className="mt-2 max-w-xs leading-6">Treino individualizado para você evoluir com clareza, estratégia e constância.</p></div><div><p className="font-extrabold text-slate-200">Contato</p><a className="mt-2 block hover:text-emerald-300" href="mailto:contato@consultoriafit.com.br">contato@consultoriafit.com.br</a><a className="mt-1 block hover:text-emerald-300" href="https://wa.me/5500000000000">WhatsApp da consultoria</a></div><div><p className="font-extrabold text-slate-200">Responsabilidade profissional</p><p className="mt-2 leading-6">Felipe Ferreira · CREF 071550-RJ</p><div className="mt-3 flex gap-4 text-xs font-bold"><a href="#" className="hover:text-white">Termos de uso</a><a href="#" className="hover:text-white">Privacidade</a></div></div></div><p className="mx-auto mt-9 max-w-7xl border-t border-slate-800 pt-5 text-xs">© {new Date().getFullYear()} ConsultoriaFit.</p></footer></body></html>; }

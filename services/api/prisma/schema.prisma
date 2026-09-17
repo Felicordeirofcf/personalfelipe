@@ -34,12 +34,16 @@ model User {
   id                    String             @id @default(cuid())
   name                  String
   email                 String             @unique
+  cpf                   String             @unique
   phone                 String?
+  passwordHash          String
   role                  UserRole
   gender                Gender             @default(MALE)
   subscriptionStatus    SubscriptionStatus @default(INACTIVE)
   mercadoPagoCustomerId String?            @unique
   createdAt             DateTime           @default(now())
+  feedbacks             Feedback[]
+  spreadsheets           Spreadsheet[]
   anamneses             Anamnesis[]
   workoutPlans          WorkoutPlan[]
   workoutLogs           WorkoutLog[]
@@ -149,4 +153,30 @@ model Subscription {
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
+}
+
+model Feedback {
+  id              String   @id @default(cuid())
+  userId          String
+  fatigueLevel    Int
+  jointPainLevel  Int
+  loadDifficulty  Int
+  message         String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Spreadsheet {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  fileUrl     String?
+  externalUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

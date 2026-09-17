@@ -8,7 +8,7 @@ const CreateAnamnesisSchema = z
     goal: z.string().trim().min(5).max(500),
     experience: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
     gender: z.enum(['MALE', 'FEMALE']).default('MALE'),
-    weeklyDays: z.number().int().min(1).max(6),
+    weeklyDays: z.number().int().min(1).max(7),
     injuries: z.array(z.string().trim().min(2).max(250)).max(10).default([]),
     availableEquip: z.string().trim().min(2).max(500),
   })

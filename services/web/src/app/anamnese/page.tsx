@@ -136,8 +136,8 @@ export default function AnamnesePage() {
                 </label>
                 <label className="md:col-span-2">
                   <span className="field-label">Dias disponíveis por semana: <strong className="text-lime-700">{form.weeklyDays}</strong></span>
-                  <input type="range" min="1" max="6" value={form.weeklyDays} onChange={(event) => setForm({ ...form, weeklyDays: Number(event.target.value) })} className="w-full accent-lime-600" />
-                  <div className="mt-1 flex justify-between text-xs font-bold text-ink/35"><span>1 dia</span><span>6 dias</span></div>
+                  <input type="range" min="1" max="7" value={form.weeklyDays} onChange={(event) => setForm({ ...form, weeklyDays: Number(event.target.value) })} className="w-full accent-lime-600" />
+                  <div className="mt-1 flex justify-between text-xs font-bold text-ink/35"><span>1 dia</span><span>7 dias</span></div>
                 </label>
               </div>
             </section>
@@ -188,7 +188,6 @@ export default function AnamnesePage() {
             {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
 
             <div className="flex flex-col-reverse justify-between gap-3 border-t border-ink/10 pt-6 sm:flex-row sm:items-center">
-              <p className="max-w-md text-xs leading-5 text-ink/45">Este sistema auxilia a prescrição, mas não substitui avaliação médica, fisioterapêutica ou o julgamento do profissional responsável.</p>
               <Button type="submit" loading={submitting} disabled={!form.userId} className="sm:min-w-52">
                 Enviar ao personal <ChevronRight size={18} />
               </Button>
@@ -198,11 +197,11 @@ export default function AnamnesePage() {
 
         <aside className="space-y-5">
           <Panel className="overflow-hidden !bg-ink p-6 text-white">
-            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-lime-300">Privacidade por padrão</p>
-            <h3 className="mt-3 font-display text-2xl font-bold">Informação útil, sem ruído.</h3>
-            <p className="mt-3 text-sm leading-6 text-white/60">O modelo recebe apenas os dados necessários à prescrição. A saída passa por validação estrutural antes de entrar no sistema.</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-lime-300">Método Felipe Ferreira</p>
+            <h3 className="mt-3 font-display text-2xl font-bold">Metodologia Sob Medida</h3>
+            <p className="mt-3 text-sm leading-6 text-white/60">Acompanhamento próximo e estratégia de treino desenhada para a sua evolução.</p>
             <div className="mt-6 space-y-3">
-              {['Schema Zod estrito', 'Restrições incluídas no prompt', 'Aprovação humana obrigatória'].map((item) => <div key={item} className="flex items-center gap-2 text-sm font-bold"><Check size={16} className="text-lime-300" /> {item}</div>)}
+              {['Acompanhamento e supervisão direta: Felipe Ferreira (CREF 071550-RJ)', 'Periodização baseada em sobrecarga progressiva e biomecânica aplicada', 'Planilhas personalizadas entregues diretamente no seu painel', 'Suporte para dúvidas e ajustes de carga'].map((item) => <div key={item} className="flex items-center gap-2 text-sm font-bold"><Check size={16} className="text-lime-300" /> {item}</div>)}
             </div>
           </Panel>
           <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-900">

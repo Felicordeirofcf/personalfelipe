@@ -14,6 +14,7 @@ import { mercadoPagoRoutes } from './modules/payments/mercadopago.routes';
 import { studentWorkoutRoutes } from './modules/student/student.routes';
 import { userRoutes } from './modules/users/user.routes';
 import { workoutRoutes } from './modules/workout/workout.routes';
+import { commercialRoutes } from './modules/commercial/commercial.routes';
 
 async function buildServer() {
   const app = Fastify({
@@ -130,6 +131,7 @@ async function buildServer() {
   await app.register(adminWorkoutRoutes, { prefix: '/api/admin' });
   await app.register(adminCheckInRoutes, { prefix: '/api/admin' });
   await app.register(mercadoPagoRoutes, { prefix: '/api/webhooks' });
+  await app.register(commercialRoutes, { prefix: '/api' });
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);

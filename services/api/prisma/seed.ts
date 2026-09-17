@@ -1,78 +1,22 @@
-import { PrismaClient, SubscriptionStatus, UserRole, WorkoutStatus } from '@prisma/client';
+import { PrismaClient, SubscriptionStatus, UserRole, WorkoutStatus, Gender } from '@prisma/client';
+import { hashPassword } from '../src/lib/password';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const passwordHash = await hashPassword('ConsultoriaFit@2026');
   const admin = await prisma.user.upsert({
     where: { email: 'personal@consultoriafit.local' },
-    update: { name: 'Marina Personal', role: UserRole.ADMIN },
-    create: {
-      name: 'Marina Personal',
-      email: 'personal@consultoriafit.local',
-      role: UserRole.ADMIN,
-    },
+    update: { name: 'Felipe Ferreira', role: UserRole.ADMIN, cpf: '00000000001', passwordHash },
+    create: { name: 'Felipe Ferreira', email: 'personal@consultoriafit.local', cpf: '00000000001', passwordHash, role: UserRole.ADMIN, gender: Gender.MALE },
   });
-
   const student = await prisma.user.upsert({
     where: { email: 'aluno@consultoriafit.local' },
-    update: {
-      name: 'Lucas Almeida',
-      phone: '+5511999999999',
-      role: UserRole.STUDENT,
-      subscriptionStatus: SubscriptionStatus.ACTIVE,
-    },
-    create: {
-      name: 'Lucas Almeida',
-      email: 'aluno@consultoriafit.local',
-      phone: '+5511999999999',
-      role: UserRole.STUDENT,
-      subscriptionStatus: SubscriptionStatus.ACTIVE,
-    },
+    update: { name: 'Lucas Almeida', phone: '+5511999999999', role: UserRole.STUDENT, gender: Gender.MALE, cpf: '00000000002', passwordHash, subscriptionStatus: SubscriptionStatus.ACTIVE },
+    create: { name: 'Lucas Almeida', email: 'aluno@consultoriafit.local', cpf: '00000000002', passwordHash, phone: '+5511999999999', role: UserRole.STUDENT, gender: Gender.MALE, subscriptionStatus: SubscriptionStatus.ACTIVE },
   });
-
-  const existingAnamnesis = await prisma.anamnesis.findFirst({
-    where: { userId: student.id },
-  });
-
-  if (!existingAnamnesis) {
-    await prisma.anamnesis.create({
-      data: {
-        userId: student.id,
-        goal: 'Hipertrofia com melhora do condicionamento geral',
-        experience: 'INTERMEDIATE',
-        weeklyDays: 4,
-        injuries: ['Desconforto leve no ombro direito em amplitudes acima de 90°'],
-        availableEquip: 'Academia completa com máquinas, cabos, barras e halteres',
-      },
-    });
-  }
-
-  const existingCheckIn = await prisma.checkIn.findFirst({ where: { userId: student.id } });
-  if (!existingCheckIn) {
-    await prisma.checkIn.create({
-      data: {
-        userId: student.id,
-        painLevel: 2,
-        painLocation: 'Ombro direito',
-        fatigueLevel: 4,
-        weightKg: 78.4,
-        notes: 'Semana produtiva, mantendo amplitude confortável nos exercícios de ombro.',
-        photoUrls: [],
-      },
-    });
-  }
-
-  console.log('Seed concluído com sucesso.');
-  console.log(`Personal: ${admin.name} (${admin.email})`);
-  console.log(`Aluno: ${student.name} (${student.email})`);
-  console.log(`Planos ativos existentes: ${await prisma.workoutPlan.count({ where: { userId: student.id, status: WorkoutStatus.ACTIVE } })}`);
+  if (!await prisma.anamnesis.findFirst({ where: { userId: student.id } })) await prisma.anamnesis.create({ data: { userId: student.id, goal: 'Hipertrofia com melhora do condicionamento geral', experience: 'INTERMEDIATE', gender: student.gender, weeklyDays: 4, injuries: [], availableEquip: 'Academia completa com máquinas, cabos, barras e halteres' } });
+  console.log(`Seed comercial concluído. Personal: ${admin.email}. Aluno: ${student.email}. Senha inicial: ConsultoriaFit@2026`);
+  console.log(`Planos ativos: ${await prisma.workoutPlan.count({ where: { userId: student.id, status: WorkoutStatus.ACTIVE } })}`);
 }
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((error) => { console.error(error); process.exit(1); }).finally(() => prisma.$disconnect());

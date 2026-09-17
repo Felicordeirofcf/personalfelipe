@@ -2,6 +2,7 @@
 
 import { Button, Notice, PageIntro, Panel, StatusBadge } from '@/components/ui';
 import { WorkoutEditor } from '@/components/workout-editor';
+import { CommercialAdminPanel } from '@/components/commercial-admin-panel';
 import { apiFetch } from '@/lib/api';
 import { hasRole } from '@/lib/auth';
 import { Anamnesis, Workout } from '@/types';
@@ -101,6 +102,8 @@ export default function AdminPage() {
       </div>
 
       {message ? <div className="mb-7"><Notice kind={message.kind}>{message.text}</Notice></div> : null}
+
+      <CommercialAdminPanel />
 
       <div className="grid items-start gap-7 xl:grid-cols-[390px_1fr]">
         <div className="space-y-5 xl:sticky xl:top-28">
