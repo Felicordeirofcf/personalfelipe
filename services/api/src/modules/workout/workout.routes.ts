@@ -13,12 +13,15 @@ const GenerateWorkoutSchema = z.object({
   anamnesisId: z.string().trim().min(1).optional(),
   studentId: z.string().trim().min(1).optional(),
   userId: z.string().trim().min(1).optional(),
+  methodology: z.string().trim().min(1).optional(),
+  previousExercises: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
   level: z.string().optional(),
   goal: z.string().optional(),
   excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
 }).passthrough();
 const ParamsSchema = z.object({ id: z.string().trim().min(1) });
 const StudentParamsSchema = z.object({ userId: z.string().trim().min(1) });
+const SessionSchema = z.object({ userId: z.string().trim().min(1), workoutId: z.string().trim().min(1).optional(), dayTitle: z.string().trim().min(2).max(120) }).strict();
 const ListQuerySchema = z.object({
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']).optional(),
   userId: z.string().trim().min(1).optional(),
@@ -104,7 +107,8 @@ export async function workoutRoutes(app: FastifyInstance) {
       }
 
       try {
-        const { plan, mode } = await generateWorkoutPlan(anamnesis, parsed.data.excludeExerciseNames ?? []);
+        const previousExercises = parsed.data.previousExercises ?? parsed.data.excludeExerciseNames ?? [];
+        const { plan, mode } = await generateWorkoutPlan(anamnesis, previousExercises, parsed.data.methodology);
         const saved = await prisma.$transaction(async (tx) => {
           await tx.workoutPlan.updateMany({
             where: { userId: anamnesis.userId, status: 'DRAFT' },
@@ -329,6 +333,34 @@ export async function workoutRoutes(app: FastifyInstance) {
           loggedAt: log.loggedAt,
         },
       });
+    },
+  );
+
+  app.post(
+    '/sessions',
+    { preHandler: authenticatedGuard, schema: { tags: ['Treinos'], summary: 'Registra a conclusão de um dia de treino' } },
+    async (request, reply) => {
+      const parsed = SessionSchema.safeParse(request.body);
+      if (!parsed.success) return reply.badRequest('Dados da sessão inválidos.');
+      const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
+      if (ownershipError) return ownershipError;
+      const activeStudent = await prisma.user.findFirst({ where: { id: parsed.data.userId, role: 'STUDENT', subscriptionStatus: 'ACTIVE' }, select: { id: true } });
+      if (!activeStudent) return reply.status(402).send({ error: 'Acesso ao treino bloqueado.' });
+      const session = await prisma.workoutSession.create({ data: parsed.data });
+      return reply.status(201).send({ session });
+    },
+  );
+
+  app.get(
+    '/sessions/:userId',
+    { preHandler: authenticatedGuard, schema: { tags: ['Treinos'], summary: 'Retorna o calendário de sessões do aluno' } },
+    async (request, reply) => {
+      const parsed = StudentParamsSchema.safeParse(request.params);
+      if (!parsed.success) return reply.badRequest('Identificador de aluno inválido.');
+      const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
+      if (ownershipError) return ownershipError;
+      const sessions = await prisma.workoutSession.findMany({ where: { userId: parsed.data.userId }, orderBy: { completedAt: 'desc' }, take: 90 });
+      return { sessions };
     },
   );
 

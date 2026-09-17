@@ -51,8 +51,11 @@ export const METHODOLOGIES_CATALOG = {
 type MethodologyKey = keyof typeof METHODOLOGIES_CATALOG;
 type TrainingMethodology = (typeof METHODOLOGIES_CATALOG)[MethodologyKey];
 
-function selectTrainingMethodology(): TrainingMethodology {
+function selectTrainingMethodology(requested?: string): TrainingMethodology {
   const keys = Object.keys(METHODOLOGIES_CATALOG) as MethodologyKey[];
+  if (requested && requested !== 'AUTO' && requested in METHODOLOGIES_CATALOG) {
+    return METHODOLOGIES_CATALOG[requested as MethodologyKey];
+  }
   const key = keys[Math.floor(Math.random() * keys.length)] ?? 'PPL';
   return METHODOLOGIES_CATALOG[key];
 }
@@ -502,9 +505,10 @@ Retorne SOMENTE o JSON válido preenchido, sem formatações Markdown ou explica
 export async function generateWorkoutPlan(
   anamnesis: AnamnesisForGeneration,
   excludedExercises: string[] = [],
+  requestedMethodology?: string,
 ): Promise<{ plan: WorkoutPlanInput; mode: GenerationMode }> {
   const shouldMock = !env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim().toLowerCase() === 'mock';
-  const methodology = selectTrainingMethodology();
+  const methodology = selectTrainingMethodology(requestedMethodology);
 
   if (shouldMock) {
     const basePlan = applyMethodologyToMock(buildMockWorkout(anamnesis), methodology);

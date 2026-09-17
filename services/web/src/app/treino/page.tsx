@@ -146,6 +146,10 @@ export default function TreinoPage() {
         method: 'POST',
         body: JSON.stringify({ userId: studentId, exercise: exercise.name, setNumber: index + 1, weightUsed: null, repsDone: null }),
       }))));
+      await apiFetch('/student/workout/complete', {
+        method: 'POST',
+        body: JSON.stringify({ userId: studentId, workoutId: workout?.id, dayTitle: currentSplit.name }),
+      });
       setMessage({ kind: 'success', text: `${currentSplit.name} concluído sem exigir o preenchimento de cargas.` });
       setEntries((current) => ({ ...current, ...Object.fromEntries(currentSplit.exercises.flatMap((exercise) => Array.from({ length: exercise.sets }, (_, index) => [key(exercise.name, index + 1), { weightUsed: '', repsDone: '', rpe: '', saved: true } as SetEntry])))}));
     } catch (error) { setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Não foi possível concluir o treino.' }); }

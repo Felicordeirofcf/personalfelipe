@@ -47,6 +47,7 @@ model User {
   anamneses             Anamnesis[]
   workoutPlans          WorkoutPlan[]
   workoutLogs           WorkoutLog[]
+  workoutSessions       WorkoutSession[]
   checkIns              CheckIn[]
   subscriptions         Subscription[]
   passwordResetTokens   PasswordResetToken[]
@@ -122,6 +123,18 @@ model WorkoutLog {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, exercise, loggedAt])
+}
+
+model WorkoutSession {
+  id          String   @id @default(cuid())
+  userId      String
+  workoutId   String?
+  dayTitle    String
+  completedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
 }
 
 model CheckIn {
