@@ -21,19 +21,40 @@ export type AnamnesisForGeneration = {
 
 export type GenerationMode = 'mock' | 'openai';
 
-const TRAINING_METHODOLOGIES = [
-  { name: 'Push / Pull / Legs (Hipertrofia Clássica Periodizada)', description: 'Empurrar, puxar e membros inferiores, com sobrecarga progressiva e 6-10 repetições em compostos e 10-15 em isoladores.' },
-  { name: 'Upper / Lower (Alta Frequência)', description: 'Alternância de membros superiores e inferiores, com densidade de treino e controle rigoroso de RIR.' },
-  { name: 'FST-7 (Finalizador Metabólico)', description: 'Bases pesadas seguidas de finalizadores com maior densidade, 10-12 repetições e descansos curtos quando forem seguros.' },
-  { name: 'Heavy Duty / Alta Intensidade', description: 'Baixo volume de séries efetivas, alta intensidade próxima da falha técnica e excêntrica controlada.' },
-  { name: 'Periodização Ondulatória Diária (DUP)', description: 'Alternância semanal entre força tensional, hipertrofia e estresse metabólico.' },
-  { name: 'Antagonista / Agonista (Supersets)', description: 'Combinação de grupos opostos, como peito e costas ou bíceps e tríceps, para eficiência neuromuscular.' },
-] as const;
+export const METHODOLOGIES_CATALOG = {
+  PPL: {
+    name: 'Push / Pull / Legs (Hipertrofia Clássica Periodizada)',
+    description: 'Foco nos padrões motores de empurrar, puxar e membros inferiores. Ênfase em sobrecarga progressiva, faixas 6-10 para compostos e 10-15 para isoladores.',
+  },
+  UPPER_LOWER: {
+    name: 'Upper / Lower (Alta Frequência - Modelo Eric Helms / Schoenfeld)',
+    description: 'Alternância de membros superiores e inferiores. Equilíbrio articular, densidade de treino e controle rigoroso de Repetições em Reserva (RIR).',
+  },
+  FST7: {
+    name: 'Metodologia FST-7 (Fascia Stretch Training - Hany Rambod)',
+    description: 'Exercícios base pesados finalizados com 7 séries de 10-12 reps e descanso curto (30-45s), visando expansão da fáscia muscular e pump intracelular máximo.',
+  },
+  HEAVY_DUTY: {
+    name: 'Heavy Duty / Alta Intensidade (Inspirado em Mike Mentzer / Dorian Yates)',
+    description: 'Baixo volume de séries efetivas (1 a 2 por exercício), intensidade máxima até a falha técnica (RIR 0) e ênfase na fase excêntrica lenta (cadência 3-0-1-0).',
+  },
+  DUP: {
+    name: 'Periodização Ondulatória Diária (DUP - Zourdos & Poliquin)',
+    description: 'Variação ondulada de estímulos na mesma semana: dias com foco em força tensional (4-6 reps) e dias de estresse metabólico elevado (12-15 reps).',
+  },
+  ANTAGONIST: {
+    name: 'Antagonista / Agonista (Treinamento em Superset - Arnold Schwarzenegger)',
+    description: 'Estímulo pareado de grupos opostos em sequência (Peito e Costas, Bíceps e Tríceps) para maximizar fluxo sanguíneo e eficiência neuromuscular.',
+  },
+} as const;
 
-type TrainingMethodology = (typeof TRAINING_METHODOLOGIES)[number];
+type MethodologyKey = keyof typeof METHODOLOGIES_CATALOG;
+type TrainingMethodology = (typeof METHODOLOGIES_CATALOG)[MethodologyKey];
 
 function selectTrainingMethodology(): TrainingMethodology {
-  return TRAINING_METHODOLOGIES[Math.floor(Math.random() * TRAINING_METHODOLOGIES.length)] ?? TRAINING_METHODOLOGIES[0];
+  const keys = Object.keys(METHODOLOGIES_CATALOG) as MethodologyKey[];
+  const key = keys[Math.floor(Math.random() * keys.length)] ?? 'PPL';
+  return METHODOLOGIES_CATALOG[key];
 }
 
 function applyMethodologyToMock(plan: WorkoutPlanInput, methodology: TrainingMethodology): WorkoutPlanInput {
