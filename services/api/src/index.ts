@@ -86,7 +86,6 @@ async function buildServer() {
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     optionsSuccessStatus: 204,
     preflight: true,
-    strictAdditionalHostCheck: false,
   });
 
   await app.register(sensible);
