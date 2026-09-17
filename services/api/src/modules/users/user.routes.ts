@@ -24,7 +24,7 @@ export async function userRoutes(app: FastifyInstance) {
       const users = await prisma.user.findMany({
         where: parsed.data.role ? { role: parsed.data.role } : undefined,
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, email: true, phone: true, role: true, subscriptionStatus: true },
+        select: { id: true, name: true, email: true, phone: true, role: true, gender: true, subscriptionStatus: true },
       });
 
       return { users: users.map((user) => ({ ...user })) };

@@ -11,6 +11,7 @@ export type AnamnesisForGeneration = {
   id: string;
   goal: string;
   experience: string;
+  gender: 'MALE' | 'FEMALE';
   weeklyDays: number;
   injuries: string[];
   availableEquip: string;
@@ -80,7 +81,37 @@ function exercise(
   return { name, sets, reps, rir, restSeconds, cadence, ...(notes ? { notes } : {}) };
 }
 
+function buildFemaleMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
+  const gym = normalize(anamnesis.availableEquip).includes('academia');
+  const leg = (name: string, focus: string, items: ExerciseInput[]): SplitInput => ({ name, focus, exercises: items });
+  const lowerA = leg('Dia 1 - Glúteos e Posterior', 'Ênfase em glúteos e cadeia posterior', [
+    exercise(gym ? 'Hip thrust com barra' : 'Elevação pélvica', 4, '8-12', 1, 150, '2-1-1-1'),
+    exercise(gym ? 'Búlgaro com tronco inclinado' : 'Afundo búlgaro', 3, '8-12', 2, 120, '3-0-1-0'),
+    exercise(gym ? 'Stiff/RDL com barra' : 'Stiff unilateral', 4, '8-10', 2, 120, '3-1-1-0'),
+    exercise(gym ? 'Mesa flexora' : 'Flexão de joelhos com toalha', 3, '10-15', 1, 75, '2-1-2-0'),
+    exercise(gym ? 'Abdução na máquina' : 'Abdução com faixa', 3, '15-20', 1, 60, '2-1-2-1'),
+  ]);
+  const upper = leg('Dia 2 - Costas, Ombros e Tríceps', 'Postura e membros superiores com volume moderado', [
+    exercise(gym ? 'Puxada alta frontal' : 'Puxada com elástico', 4, '8-12', 2, 120, '3-0-1-0'),
+    exercise(gym ? 'Remada baixa' : 'Remada unilateral', 4, '8-12', 2, 120, '2-1-1-0'),
+    exercise(gym ? 'Elevação lateral no plano escapular' : 'Elevação lateral com faixa', 3, '12-15', 1, 75, '2-0-1-1'),
+    exercise(gym ? 'Face pull na polia' : 'Crucifixo inverso com faixa', 3, '12-15', 1, 75, '2-1-1-0'),
+    exercise(gym ? 'Tríceps na polia com corda' : 'Tríceps com faixa', 3, '10-15', 1, 75, '2-0-2-0'),
+  ]);
+  const lowerB = leg('Dia 3 - Quadríceps e Glúteos', 'Quadríceps, glúteos e membros inferiores completos', [
+    exercise(gym ? 'Leg press 45°' : 'Agachamento goblet', 4, '8-12', 2, 150, '3-0-1-0'),
+    exercise(gym ? 'Agachamento no Smith' : 'Agachamento livre', 4, '8-10', 2, 150, '3-1-1-0'),
+    exercise(gym ? 'Cadeira extensora' : 'Agachamento espanhol', 3, '10-15', 1, 75, '2-1-2-0'),
+    exercise(gym ? 'Hip thrust na máquina' : 'Elevação pélvica', 3, '10-15', 1, 90, '2-1-1-1'),
+    exercise(gym ? 'Abdução em máquina' : 'Abdução com faixa', 3, '15-20', 1, 60, '2-1-2-1'),
+  ]);
+  const templates = [lowerA, upper, lowerB];
+  const splits = Array.from({ length: Math.min(Math.max(anamnesis.weeklyDays, 1), 6) }, (_, index) => templates[index % templates.length]);
+  return WorkoutPlanSchema.parse({ splits, rationale: `Template feminino com ênfase em glúteos e membros inferiores para ${anamnesis.user.name}; costas, ombros e tríceps recebem volume moderado. RIR 1-2 e descansos de 60-150 segundos.` });
+}
+
 function buildMockWorkout(anamnesis: AnamnesisForGeneration): WorkoutPlanInput {
+  if (anamnesis.gender === 'FEMALE') return buildFemaleMockWorkout(anamnesis);
   const equipment = normalize(anamnesis.availableEquip);
   const hasGym = [
     'academia',
@@ -347,6 +378,7 @@ function buildTechnicalPrompt(anamnesis: AnamnesisForGeneration) {
     studentName: anamnesis.user.name,
     goal: anamnesis.goal,
     experience: anamnesis.experience,
+    gender: anamnesis.gender,
     weeklyDays: anamnesis.weeklyDays,
     injuries: anamnesis.injuries,
     availableEquipment: anamnesis.availableEquip,
@@ -371,8 +403,9 @@ DIRETRIZES TÉCNICAS E METODOLÓGICAS:
    - Descanso (restSeconds): 90 a 150 segundos para multiarticulares pesados; 60 a 90 segundos para monoarticulares/cabos.
 4. BIOMECÂNICA E LESÕES:
    - Proíba desenvolvimento por trás do pescoço ou puxadas atrás da nuca sob qualquer hipótese.
-   - Para relatos de dor no ombro ou impacto subacromial: prefira halteres com pegada neutra/semipronada, elevações laterais no plano escapular até 90° e puxadas neutras.
-5. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
+	   - Para relatos de dor no ombro ou impacto subacromial: prefira halteres com pegada neutra/semipronada, elevações laterais no plano escapular até 90° e puxadas neutras.
+	5. PERSONALIZAÇÃO POR SEXO BIOLÓGICO: para FEMALE priorize glúteos e membros inferiores, com ao menos 2 dias de pernas quando a frequência permitir, hip thrust, búlgaro inclinado, abdução e trabalho de posterior/quadríceps; superiores devem enfatizar costas/postura, deltoides e tríceps com volume moderado de peitoral. Para MALE, use volume substancial em peitoral, dorsais, deltoides e braços, mantendo pernas completas e pesadas. Para todos: 5 a 7 exercícios, 16 a 24 séries diárias, RIR 1-2 e descansos de 90-150s em multiarticulares e 60-90s em isoladores.
+	6. CRIE EXATAMENTE ${anamnesis.weeklyDays} SPLITS (um para cada dia semanal disponível).
 
 SCHEMA JSON RIGOROSO:
 {

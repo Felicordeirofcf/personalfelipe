@@ -1,6 +1,7 @@
 export type UserRole = 'ADMIN' | 'STUDENT';
 export type WorkoutStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export type SubscriptionStatus = 'ACTIVE' | 'INACTIVE' | 'OVERDUE' | 'CANCELED';
+export type Gender = 'MALE' | 'FEMALE';
 
 export type User = {
   id: string;
@@ -8,6 +9,7 @@ export type User = {
   email: string;
   phone: string | null;
   role: UserRole;
+  gender: Gender;
   subscriptionStatus: SubscriptionStatus;
 };
 
@@ -28,6 +30,7 @@ export type Anamnesis = {
   userId: string;
   goal: string;
   experience: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  gender: Gender;
   weeklyDays: number;
   injuries: string[];
   availableEquip: string;

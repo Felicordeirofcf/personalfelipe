@@ -32,6 +32,7 @@ export default function AnamnesePage() {
     userId: '',
     goal: 'Hipertrofia com melhora do condicionamento geral',
     experience: 'INTERMEDIATE' as 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED',
+    gender: 'FEMALE' as 'MALE' | 'FEMALE',
     weeklyDays: 4,
     injuries: [] as string[],
     customInjury: '',
@@ -73,6 +74,7 @@ export default function AnamnesePage() {
           experience: form.experience,
           weeklyDays: form.weeklyDays,
           injuries,
+          gender: form.gender,
           availableEquip: form.availableEquip,
         }),
       });
@@ -117,6 +119,17 @@ export default function AnamnesePage() {
                     <option value="ADVANCED">Avançado</option>
                   </select>
                 </label>
+                <fieldset className="md:col-span-2">
+                  <legend className="field-label">Sexo biológico para personalização biomecânica</legend>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    {([{ value: 'FEMALE', label: 'Feminino', description: 'Ênfase em glúteos e membros inferiores' }, { value: 'MALE', label: 'Masculino', description: 'Ênfase equilibrada em tronco e pernas' }] as const).map((option) => (
+                      <label key={option.value} className={`cursor-pointer rounded-2xl border p-4 transition ${form.gender === option.value ? 'border-lime-600 bg-lime-50' : 'border-ink/10 bg-white hover:border-lime-500/50'}`}>
+                        <input className="sr-only" type="radio" name="gender" value={option.value} checked={form.gender === option.value} onChange={() => setForm({ ...form, gender: option.value })} />
+                        <strong className="block">{option.label}</strong><span className="text-xs text-ink/55">{option.description}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <label className="md:col-span-2">
                   <span className="field-label">Objetivo principal</span>
                   <textarea className="field-control min-h-28 resize-y" value={form.goal} onChange={(event) => setForm({ ...form, goal: event.target.value })} minLength={5} required placeholder="Ex.: ganhar massa muscular, melhorar postura e condicionamento..." />

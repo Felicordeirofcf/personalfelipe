@@ -25,12 +25,18 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model User {
   id                    String             @id @default(cuid())
   name                  String
   email                 String             @unique
   phone                 String?
   role                  UserRole
+  gender                Gender             @default(MALE)
   subscriptionStatus    SubscriptionStatus @default(INACTIVE)
   mercadoPagoCustomerId String?            @unique
   createdAt             DateTime           @default(now())
@@ -46,6 +52,7 @@ model Anamnesis {
   userId         String
   goal           String
   experience     String
+  gender         Gender   @default(MALE)
   weeklyDays     Int
   injuries       String[]
   availableEquip String

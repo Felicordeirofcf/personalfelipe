@@ -8,8 +8,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 
 const demoProfiles: Record<'student' | 'admin', User> = {
-  student: { id: 'demo-student', name: 'Lucas Almeida', email: 'aluno@consultoriafit.local', phone: null, role: 'STUDENT', subscriptionStatus: 'ACTIVE' },
-  admin: { id: 'demo-admin', name: 'Marina Personal', email: 'personal@consultoriafit.local', phone: null, role: 'ADMIN', subscriptionStatus: 'ACTIVE' },
+  student: { id: 'demo-student', name: 'Lucas Almeida', email: 'aluno@consultoriafit.local', phone: null, role: 'STUDENT', gender: 'MALE', subscriptionStatus: 'ACTIVE' },
+  admin: { id: 'demo-admin', name: 'Marina Personal', email: 'personal@consultoriafit.local', phone: null, role: 'ADMIN', gender: 'FEMALE', subscriptionStatus: 'ACTIVE' },
 };
 
 type AccessTab = 'student' | 'admin';
