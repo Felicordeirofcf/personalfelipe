@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Notice, PageIntro, Panel } from '@/components/ui';
+import { WorkoutPrintSheet } from '@/components/workout-print-sheet';
 import { apiFetch } from '@/lib/api';
 import { getSessionUser } from '@/lib/auth';
 import { LastWorkoutLog, Workout, WorkoutLog } from '@/types';
@@ -10,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type SetEntry = { weightUsed: string; repsDone: string; rpe: string; saved?: boolean; saving?: boolean };
 type VideoModal = { name: string; url: string } | null;
+type PrescriptionProfile = { goal: string; weeklyDays: number };
 
 function previousPerformance(log: LastWorkoutLog | null) {
   if (!log) return 'Primeira sessão registrada';
@@ -37,6 +39,7 @@ export default function TreinoPage() {
   const router = useRouter();
   const [studentId, setStudentId] = useState('');
   const [workout, setWorkout] = useState<Workout | null>(null);
+  const [prescriptionProfile, setPrescriptionProfile] = useState<PrescriptionProfile | null>(null);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [activeSplit, setActiveSplit] = useState(0);
   const [entries, setEntries] = useState<Record<string, SetEntry>>({});
@@ -49,13 +52,15 @@ export default function TreinoPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const response = await apiFetch<{ workout: Workout; recentLogs: WorkoutLog[] }>(`/student/active-workout/${userId}`);
+      const response = await apiFetch<{ workout: Workout; prescriptionProfile: PrescriptionProfile; recentLogs: WorkoutLog[] }>(`/student/active-workout/${userId}`);
       setWorkout(response.workout);
+      setPrescriptionProfile(response.prescriptionProfile);
       setLogs(response.recentLogs);
       setActiveSplit(0);
       setEntries({});
     } catch (error) {
       setWorkout(null);
+      setPrescriptionProfile(null);
       setLogs([]);
       setMessage({ kind: 'info', text: error instanceof Error ? error.message : 'Treino ativo não encontrado.' });
     } finally {
@@ -202,7 +207,7 @@ export default function TreinoPage() {
         ) : null}
       </div>
 
-      {workout ? <section className="print-only print-sheet"><h1>ConsultoriaFit · Ficha de treino</h1><p><strong>Aluno:</strong> {workout.user?.name ?? 'Aluno'}</p><p><strong>Orientação:</strong> {workout.rationale}</p>{workout.splits.map((split) => <div key={split.id} className="print-split"><h2>{split.name} · {split.focus}</h2><table className="print-table"><thead><tr><th>Exercício</th><th>Prescrição</th><th>Última sessão</th><th>Carga</th><th>Reps</th></tr></thead><tbody>{split.exercises.map((exercise) => <tr key={exercise.id}><td><strong>{exercise.name}</strong><br />{exercise.notes}</td><td>{exercise.sets} × {exercise.reps}<br />RIR {exercise.rir} · {exercise.restSeconds}s</td><td>{exercise.lastLog ? `${exercise.lastLog.weightUsed} kg × ${exercise.lastLog.repsDone}` : 'Sem registro'}</td><td>________</td><td>________</td></tr>)}</tbody></table></div>)}</section> : null}
+      {workout ? <WorkoutPrintSheet workout={workout} profile={prescriptionProfile} /> : null}
 
       {video && activeVideo ? <div className="screen-only fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Vídeo de ${video.name}`} onMouseDown={(event) => { if (event.currentTarget === event.target) setVideo(null); }}><div className="w-full max-w-4xl overflow-hidden rounded-3xl bg-zinc-900/70 shadow-2xl"><div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4"><div><p className="text-[10px] font-black uppercase tracking-wider text-emerald-300">Demonstração</p><h2 className="font-display text-lg font-bold">{video.name}</h2></div><button onClick={() => setVideo(null)} className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-800 text-white transition hover:bg-red-950/50 hover:text-red-300" aria-label="Fechar vídeo"><X size={20} /></button></div><div className="aspect-video bg-black">{activeVideo.kind === 'video' ? <video src={activeVideo.src} controls autoPlay className="h-full w-full" /> : <iframe src={activeVideo.src} title={`Demonstração de ${video.name}`} className="h-full w-full border-0" sandbox="allow-scripts allow-same-origin allow-presentation" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}</div></div></div> : null}
     </>

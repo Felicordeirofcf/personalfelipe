@@ -85,18 +85,19 @@ export function CommercialAdminPanel() {
                   <div>
                     <p className="font-bold text-zinc-100">{student.name}</p>
                     <p className="text-xs text-zinc-400">{student.email}</p>
-                    <p className={`mt-1 text-xs font-bold ${active ? 'text-emerald-300' : 'text-amber-300'}`}>
-                      Assinatura: {student.subscriptionStatus}
-                    </p>
+                    <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${active ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border-red-500/30 bg-red-500/10 text-red-300'}`}>
+                      {student.subscriptionStatus}
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={active ? 'ghost' : 'primary'}
-                      loading={updatingStudentId === student.id}
+                    <button
+                      type="button"
+                      disabled={updatingStudentId === student.id}
                       onClick={() => changeSubscription(student, active ? 'INACTIVE' : 'ACTIVE')}
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:cursor-wait disabled:opacity-60 ${active ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'}`}
                     >
-                      {active ? 'Desativar acesso' : 'Ativar acesso'}
-                    </Button>
+                      {updatingStudentId === student.id ? 'Atualizando...' : active ? 'Desativar' : 'Ativar Aluno'}
+                    </button>
                     <Button variant="danger" onClick={() => remove(student.id)}>Excluir</Button>
                   </div>
                 </div>

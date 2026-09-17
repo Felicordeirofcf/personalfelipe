@@ -6,6 +6,7 @@ import {
   WorkoutPlanInput,
   WorkoutPlanSchema,
 } from './workout.schema';
+import { attachExerciseVideos } from './exercise-videos';
 
 export type AnamnesisForGeneration = {
   id: string;
@@ -437,7 +438,7 @@ export async function generateWorkoutPlan(
   const shouldMock = !env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim().toLowerCase() === 'mock';
 
   if (shouldMock) {
-    const plan = buildMockWorkout(anamnesis);
+    const plan = attachExerciseVideos(buildMockWorkout(anamnesis));
     assertBiomechanicalSafety(plan, anamnesis.injuries);
     return { plan, mode: 'mock' };
   }
@@ -481,8 +482,9 @@ export async function generateWorkoutPlan(
       );
     }
 
-    assertBiomechanicalSafety(parsed.data, anamnesis.injuries);
-    return { plan: parsed.data, mode: 'openai' };
+    const plan = attachExerciseVideos(parsed.data);
+    assertBiomechanicalSafety(plan, anamnesis.injuries);
+    return { plan, mode: 'openai' };
   } catch (error) {
     if (error instanceof AiGenerationError) throw error;
     throw new AiGenerationError(

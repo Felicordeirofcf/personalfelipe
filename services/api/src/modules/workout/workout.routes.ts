@@ -42,11 +42,13 @@ export async function approveWorkoutById(id: string, logger: FastifyBaseLogger) 
       where: { userId: current.userId, status: 'ACTIVE' },
       data: { status: 'ARCHIVED' },
     });
-    return tx.workoutPlan.update({
+    const published = await tx.workoutPlan.update({
       where: { id: current.id },
       data: { status: 'ACTIVE' },
       include: workoutInclude,
     });
+    await tx.user.update({ where: { id: current.userId }, data: { subscriptionStatus: 'ACTIVE' } });
+    return published;
   });
 
   const notification = await sendWorkoutApprovedWhatsApp(
@@ -293,6 +295,25 @@ export async function workoutRoutes(app: FastifyInstance) {
           loggedAt: log.loggedAt,
         },
       });
+    },
+  );
+
+  app.patch(
+    '/:id/publish',
+    {
+      preHandler: adminGuard,
+      schema: {
+        tags: ['Treinos'],
+        summary: 'Publica e libera explicitamente um treino revisado para o aluno',
+      },
+    },
+    async (request, reply) => {
+      const parsed = ParamsSchema.safeParse(request.params);
+      if (!parsed.success) return reply.badRequest('Identificador de treino inválido.');
+
+      const result = await approveWorkoutById(parsed.data.id, request.log);
+      if (!result.ok) return reply.status(result.statusCode).send({ error: result.error });
+      return reply.status(200).send({ workout: result.workout, notification: result.notification });
     },
   );
 

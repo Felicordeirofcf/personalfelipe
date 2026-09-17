@@ -16,7 +16,7 @@ export function StatusBadge({ status }: { status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED
     ARCHIVED: 'border-slate-400/20 bg-slate-400/10 text-slate-300',
     PENDING: 'border-violet-400/25 bg-violet-400/10 text-violet-300',
   } as const;
-  const labels = { DRAFT: 'Rascunho', ACTIVE: 'Ativo', ARCHIVED: 'Arquivado', PENDING: 'Pendente' };
+  const labels = { DRAFT: 'Rascunho', ACTIVE: 'Liberado', ARCHIVED: 'Arquivado', PENDING: 'Pendente' };
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${styles[status]}`}>{labels[status]}</span>;
 }
 

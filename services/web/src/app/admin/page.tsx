@@ -2,6 +2,7 @@
 
 import { Button, Notice, PageIntro, Panel, StatusBadge } from '@/components/ui';
 import { WorkoutEditor } from '@/components/workout-editor';
+import { WorkoutPrintSheet } from '@/components/workout-print-sheet';
 import { CommercialAdminPanel } from '@/components/commercial-admin-panel';
 import { apiFetch } from '@/lib/api';
 import { hasRole } from '@/lib/auth';
@@ -159,7 +160,16 @@ export default function AdminPage() {
 
         <Panel className="min-w-0 p-5 md:p-7">
           {selectedWorkout ? (
-            <WorkoutEditor workout={selectedWorkout} onChange={handleWorkoutChange} />
+            <>
+              <WorkoutEditor workout={selectedWorkout} onChange={handleWorkoutChange} />
+              <WorkoutPrintSheet
+                workout={selectedWorkout}
+                profile={(() => {
+                  const profile = anamneses.find((item) => item.user.id === selectedWorkout.userId);
+                  return profile ? { goal: profile.goal, weeklyDays: profile.weeklyDays } : null;
+                })()}
+              />
+            </>
           ) : (
             <div className="grid min-h-[520px] place-items-center p-8 text-center">
               <div><span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-300"><BrainCircuit size={28} /></span><h2 className="mt-5 font-display text-2xl font-bold">Pronto para construir</h2><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-400">Escolha uma anamnese na fila e clique em “Gerar com IA”. O plano aparecerá aqui para revisão.</p></div>

@@ -16,7 +16,7 @@ import { userRoutes } from './modules/users/user.routes';
 import { workoutRoutes } from './modules/workout/workout.routes';
 import { commercialRoutes } from './modules/commercial/commercial.routes';
 
-async function buildServer() {
+export async function buildServer() {
   const app = Fastify({
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
@@ -80,13 +80,22 @@ async function buildServer() {
     }
   };
 
+  const applyCorsHeaders = (origin: string | undefined, reply: { header: (name: string, value: string) => unknown }) => {
+    if (!origin || !isOriginAllowed(origin)) return;
+    reply.header('Access-Control-Allow-Origin', origin.trim().replace(/\/+$/, ''));
+    reply.header('Access-Control-Allow-Credentials', 'true');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    reply.header('Vary', 'Origin');
+  };
+
   await app.register(cors, {
     origin: (origin, callback) => {
       const allowed = isOriginAllowed(origin);
       callback(null, allowed);
     },
     credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Origin',
       'X-Requested-With',
@@ -146,6 +155,7 @@ async function buildServer() {
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
     if (reply.sent) return;
+    applyCorsHeaders(request.headers.origin, reply);
     const normalized = error instanceof Error ? error : new Error('Erro desconhecido');
     const candidateStatus =
       'statusCode' in normalized && typeof normalized.statusCode === 'number'
@@ -155,6 +165,11 @@ async function buildServer() {
     reply.status(statusCode).send({
       error: statusCode === 500 ? 'Erro interno do servidor.' : normalized.message,
     });
+  });
+
+  app.setNotFoundHandler((request, reply) => {
+    applyCorsHeaders(request.headers.origin, reply);
+    return reply.status(404).send({ error: 'Rota não encontrada.' });
   });
 
   app.addHook('onClose', async () => {
@@ -174,4 +189,4 @@ async function start() {
   }
 }
 
-void start();
+if (require.main === module) void start();
