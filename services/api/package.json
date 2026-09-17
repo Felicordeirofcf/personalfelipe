@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "prisma": {
-    "seed": "node dist/prisma/seed.js"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
