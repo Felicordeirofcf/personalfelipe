@@ -31,6 +31,13 @@ export async function authRoutes(app: FastifyInstance) {
     const token = app.jwt.sign({ sub: user.id, email: user.email, role: user.role }, { expiresIn: '12h' }); return { token, user: publicUser(user as PublicUser) };
   });
 
+  app.get('/me', async (request, reply) => {
+    await request.jwtVerify();
+    const user = await prisma.user.findUnique({ where: { id: request.user.sub } });
+    if (!user) return reply.notFound('Usuário não encontrado.');
+    return { user: publicUser(user as PublicUser) };
+  });
+
   app.post('/change-password', async (request, reply) => {
     await request.jwtVerify(); const parsed = ChangePasswordSchema.safeParse(request.body); if (!parsed.success) return reply.badRequest('A nova senha deve ter pelo menos 8 caracteres.');
     const user = await prisma.user.findUnique({ where: { id: request.user.sub } }); if (!user || !(await verifyPassword(parsed.data.currentPassword, user.passwordHash))) return reply.unauthorized('Senha atual incorreta.');

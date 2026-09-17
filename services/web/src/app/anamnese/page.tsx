@@ -106,7 +106,7 @@ export default function AnamnesePage() {
           <form onSubmit={handleSubmit} className="space-y-9">
             <section>
               <div className="mb-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-emerald-400"><ClipboardPlus size={19} /></span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/10 text-emerald-300"><ClipboardPlus size={19} /></span>
                 <div><p className="text-xs font-black uppercase tracking-wider text-emerald-400">Etapa 01</p><h2 className="font-display text-xl font-semibold text-zinc-100">Perfil e objetivo</h2></div>
               </div>
               <div className="grid gap-5 md:grid-cols-2">
@@ -179,7 +179,7 @@ export default function AnamnesePage() {
               <h2 className="font-display text-xl font-semibold text-zinc-100">Equipamentos disponíveis</h2>
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 {equipmentOptions.map((item) => (
-                  <label key={item} className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold leading-6 transition ${form.availableEquip === item ? 'border-emerald-400 bg-emerald-500 text-zinc-950' : 'border-zinc-800 bg-zinc-900/70 text-white/65 hover:border-ink/30'}`}>
+                  <label key={item} className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold leading-6 transition ${form.availableEquip === item ? 'border-emerald-400 bg-emerald-500 text-zinc-950' : 'border-zinc-800 bg-zinc-900/70 text-zinc-200 hover:border-emerald-500/50'}`}>
                     <input type="radio" name="equipment" className="sr-only" value={item} checked={form.availableEquip === item} onChange={() => setForm({ ...form, availableEquip: item })} />
                     {item}
                   </label>

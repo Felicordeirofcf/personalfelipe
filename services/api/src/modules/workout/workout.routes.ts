@@ -1,6 +1,7 @@
 import { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma';
+import { adminGuard, authenticatedGuard, ensureOwnStudentResource } from '../../plugins/auth.guard';
 import { activeSubscriptionGuard } from '../../plugins/subscription.guard';
 import { AiGenerationError, generateWorkoutPlan } from '../ai/ai.service';
 import { WorkoutPlanSchema } from '../ai/workout.schema';
@@ -59,6 +60,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.post(
     '/generate',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Treinos'],
         summary: 'Gera um treino com OpenAI ou fallback local e salva como rascunho',
@@ -130,6 +132,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.get(
     '/',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Treinos'],
         summary: 'Lista planos para o painel do personal',
@@ -156,6 +159,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.put(
     '/:id',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Treinos'],
         summary: 'Atualiza integralmente um treino em rascunho',
@@ -218,6 +222,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.patch(
     '/:id/approve',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Treinos'],
         summary: 'Aprova o rascunho e o torna o único treino ativo do aluno',
@@ -236,6 +241,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.post(
     '/log',
     {
+      preHandler: authenticatedGuard,
       schema: {
         tags: ['Treinos'],
         summary: 'Registra carga, repetições e esforço percebido de uma série',
@@ -248,6 +254,17 @@ export async function workoutRoutes(app: FastifyInstance) {
           error: 'Registro da série inválido.',
           details: parsed.error.flatten().fieldErrors,
         });
+      }
+
+      const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
+      if (ownershipError) return ownershipError;
+
+      const activeStudent = await prisma.user.findFirst({
+        where: { id: parsed.data.userId, role: 'STUDENT', subscriptionStatus: 'ACTIVE' },
+        select: { id: true },
+      });
+      if (!activeStudent) {
+        return reply.status(402).send({ error: 'Acesso ao treino bloqueado. Ative a assinatura para continuar.' });
       }
 
       const exerciseExists = await prisma.splitExercise.findFirst({
@@ -282,7 +299,7 @@ export async function workoutRoutes(app: FastifyInstance) {
   app.get(
     '/student/:userId',
     {
-      preHandler: activeSubscriptionGuard,
+      preHandler: [authenticatedGuard, activeSubscriptionGuard],
       schema: {
         tags: ['Treinos'],
         summary: 'Retorna o treino ativo e os registros recentes do aluno',
@@ -291,6 +308,9 @@ export async function workoutRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const parsed = StudentParamsSchema.safeParse(request.params);
       if (!parsed.success) return reply.badRequest('Identificador de aluno inválido.');
+
+      const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
+      if (ownershipError) return ownershipError;
 
       const result = await getActiveWorkoutForStudent(parsed.data.userId);
       if (!result) return reply.notFound('O aluno ainda não possui um treino ativo.');

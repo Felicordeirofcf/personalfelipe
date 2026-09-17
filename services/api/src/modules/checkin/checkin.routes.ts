@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma';
+import { adminGuard, authenticatedGuard, ensureOwnStudentResource } from '../../plugins/auth.guard';
 
 const CreateCheckInSchema = z.object({
   userId: z.string().trim().min(1),
@@ -41,7 +42,7 @@ function toCheckInView(checkIn: {
 export async function studentCheckInRoutes(app: FastifyInstance) {
   app.post(
     '/checkin',
-    { schema: { tags: ['Check-ins'], summary: 'Registra o check-in periódico do aluno' } },
+    { preHandler: authenticatedGuard, schema: { tags: ['Check-ins'], summary: 'Registra o check-in periódico do aluno' } },
     async (request, reply) => {
       const parsed = CreateCheckInSchema.safeParse(request.body);
       if (!parsed.success) {
@@ -50,6 +51,9 @@ export async function studentCheckInRoutes(app: FastifyInstance) {
           details: parsed.error.flatten().fieldErrors,
         });
       }
+
+      const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
+      if (ownershipError) return ownershipError;
 
       const student = await prisma.user.findFirst({
         where: { id: parsed.data.userId, role: 'STUDENT' },
@@ -72,7 +76,7 @@ export async function studentCheckInRoutes(app: FastifyInstance) {
 export async function adminCheckInRoutes(app: FastifyInstance) {
   app.get(
     '/checkins/:userId',
-    { schema: { tags: ['Check-ins'], summary: 'Retorna o histórico de check-ins de um aluno' } },
+    { preHandler: adminGuard, schema: { tags: ['Check-ins'], summary: 'Retorna o histórico de check-ins de um aluno' } },
     async (request, reply) => {
       const parsed = UserParamsSchema.safeParse(request.params);
       if (!parsed.success) return reply.badRequest('Identificador de aluno inválido.');

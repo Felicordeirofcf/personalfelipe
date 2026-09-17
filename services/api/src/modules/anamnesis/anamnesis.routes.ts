@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma';
+import { adminGuard } from '../../plugins/auth.guard';
 
 const CreateAnamnesisSchema = z
   .object({
@@ -70,6 +71,7 @@ export async function anamnesisRoutes(app: FastifyInstance) {
   app.get(
     '/',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Anamnese'],
         summary: 'Lista anamneses e informa se ainda aguardam geração de treino',

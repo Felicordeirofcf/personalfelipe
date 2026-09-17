@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma';
+import { adminGuard } from '../../plugins/auth.guard';
 
 const QuerySchema = z.object({
   role: z.enum(['ADMIN', 'STUDENT']).optional(),
@@ -14,6 +15,7 @@ export async function userRoutes(app: FastifyInstance) {
   app.get(
     '/',
     {
+      preHandler: adminGuard,
       schema: {
         tags: ['Usuários'],
         summary: 'Lista usuários disponíveis para os fluxos de demonstração',
@@ -35,13 +37,7 @@ export async function userRoutes(app: FastifyInstance) {
     },
   );
 
-  app.patch('/:id/subscription', async (request, reply) => {
-    await request.jwtVerify();
-
-    if (!['ADMIN', 'COACH'].includes(request.user.role as string)) {
-      return reply.forbidden('Apenas administradores podem alterar o acesso dos alunos.');
-    }
-
+  app.patch('/:id/subscription', { preHandler: adminGuard }, async (request, reply) => {
     const params = z.object({ id: z.string().trim().min(1) }).safeParse(request.params);
     const body = SubscriptionSchema.safeParse(request.body);
     if (!params.success || !body.success) {

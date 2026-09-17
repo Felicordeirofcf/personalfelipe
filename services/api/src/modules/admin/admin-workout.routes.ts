@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { adminGuard } from '../../plugins/auth.guard';
 import { approveWorkoutById } from '../workout/workout.routes';
 
 const ParamsSchema = z.object({ id: z.string().trim().min(1) });
@@ -7,7 +8,7 @@ const ParamsSchema = z.object({ id: z.string().trim().min(1) });
 export async function adminWorkoutRoutes(app: FastifyInstance) {
   app.patch(
     '/workouts/:id/approve',
-    { schema: { tags: ['Treinos'], summary: 'Aprova um treino e dispara a notificação ao aluno' } },
+    { preHandler: adminGuard, schema: { tags: ['Treinos'], summary: 'Aprova um treino e dispara a notificação ao aluno' } },
     async (request, reply) => {
       const parsed = ParamsSchema.safeParse(request.params);
       if (!parsed.success) return reply.badRequest('Identificador de treino inválido.');
