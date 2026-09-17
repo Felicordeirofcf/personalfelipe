@@ -88,20 +88,20 @@ export default function CheckInPage() {
             <section className="rounded-3xl border border-red-100 bg-red-50/55 p-5 md:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-red-100 text-red-700"><HeartPulse size={20} /></span><div><p className="text-xs font-black uppercase tracking-wider text-red-700">Dor articular</p><h2 className="font-display text-xl font-bold">Nível percebido</h2></div></div>
-                <span className={`grid h-14 w-14 place-items-center rounded-2xl text-xl font-black ${form.painLevel >= 5 ? 'bg-red-600 text-white' : 'bg-white text-red-700'}`}>{form.painLevel}</span>
+                <span className={`grid h-14 w-14 place-items-center rounded-2xl text-xl font-black ${form.painLevel >= 5 ? 'bg-red-600 text-white' : 'bg-[#111622] text-red-700'}`}>{form.painLevel}</span>
               </div>
               <input aria-label="Nível de dor" type="range" min="0" max="10" value={form.painLevel} onChange={(event) => setForm({ ...form, painLevel: Number(event.target.value) })} className="mt-6 w-full accent-red-600" />
-              <div className="mt-2 flex justify-between text-[11px] font-bold text-ink/40"><span>0 · sem dor</span><span>10 · dor máxima</span></div>
+              <div className="mt-2 flex justify-between text-[11px] font-bold text-zinc/40"><span>0 · sem dor</span><span>10 · dor máxima</span></div>
               <label className="mt-5 block"><span className="field-label">Local da dor</span><select className="field-control" value={form.painLocation} onChange={(event) => setForm({ ...form, painLocation: event.target.value })}>{painLocations.map((location) => <option key={location}>{location}</option>)}</select></label>
             </section>
 
             <section className="rounded-3xl border border-amber-100 bg-amber-50/55 p-5 md:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-amber-100 text-amber-700"><Activity size={20} /></span><div><p className="text-xs font-black uppercase tracking-wider text-amber-700">Fadiga geral</p><h2 className="font-display text-xl font-bold">Nível percebido</h2></div></div>
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-xl font-black text-amber-700">{form.fatigueLevel}</span>
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#111622] text-xl font-black text-amber-700">{form.fatigueLevel}</span>
               </div>
               <input aria-label="Nível de fadiga" type="range" min="0" max="10" value={form.fatigueLevel} onChange={(event) => setForm({ ...form, fatigueLevel: Number(event.target.value) })} className="mt-6 w-full accent-amber-600" />
-              <div className="mt-2 flex justify-between text-[11px] font-bold text-ink/40"><span>0 · recuperado</span><span>10 · exausto</span></div>
+              <div className="mt-2 flex justify-between text-[11px] font-bold text-zinc/40"><span>0 · recuperado</span><span>10 · exausto</span></div>
             </section>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -110,22 +110,22 @@ export default function CheckInPage() {
             </div>
 
             {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
-            <div className="flex flex-col-reverse items-start justify-between gap-4 border-t border-ink/10 pt-6 sm:flex-row sm:items-center">
-              <p className="max-w-md text-xs leading-5 text-ink/45">Dor intensa ou persistente deve ser avaliada por profissional de saúde. O check-in não substitui avaliação clínica.</p>
+            <div className="flex flex-col-reverse items-start justify-between gap-4 border-t border-zinc-800/10 pt-6 sm:flex-row sm:items-center">
+              <p className="max-w-md text-xs leading-5 text-zinc/45">Dor intensa ou persistente deve ser avaliada por profissional de saúde. O check-in não substitui avaliação clínica.</p>
               <Button type="submit" loading={submitting} disabled={!form.userId} className="min-w-52">Enviar check-in <ChevronRight size={18} /></Button>
             </div>
           </form>
         </Panel>
 
         <aside className="space-y-5 lg:sticky lg:top-28">
-          <Panel className="!bg-ink p-6 text-white">
+          <Panel className="!bg-zinc-800 p-6 text-white">
             <CalendarCheck2 className="text-lime-300" size={27} />
             <h3 className="mt-4 font-display text-2xl font-bold">Crie uma linha do tempo.</h3>
             <p className="mt-3 text-sm leading-6 text-white/60">Um registro semanal ou quinzenal permite comparar sintomas e recuperação com as mudanças do plano.</p>
           </Panel>
-          <div className="rounded-3xl bg-mint p-6 text-lime-900">
+          <div className="rounded-3xl bg-emerald-500/10 p-6 text-emerald-200">
             <div className="flex items-center gap-2"><ShieldCheck size={20} /><h3 className="font-display font-bold">Sinal de atenção</h3></div>
-            <p className="mt-3 text-sm leading-6 text-lime-900/70">Check-ins com dor igual ou superior a 5 recebem destaque vermelho no painel do personal.</p>
+            <p className="mt-3 text-sm leading-6 text-emerald-200/70">Check-ins com dor igual ou superior a 5 recebem destaque vermelho no painel do personal.</p>
           </div>
         </aside>
       </div>

@@ -48,3 +48,11 @@ Não foi feito deploy, teste de endpoint público, alteração de banco ou execu
 ## Empacotamento
 
 O ZIP final exclui `.git`, `node_modules`, `.next`, `dist`, caches e arquivos temporários de validação. A branch de segurança permanece somente no clone local e não é incluída no pacote.
+
+## Adendo — redesign visual completo
+
+Após a sincronização inicial, o frontend recebeu uma refatoração visual abrangente. O sistema de design foi consolidado em fundo `#070A0F`, superfícies grafite, bordas zinc sutis, tipografia branca/zinc de alto contraste e verde esmeralda para ações e estados ativos. Os componentes compartilhados `PageIntro`, `Panel`, `Button`, `Notice` e `StatusBadge` foram atualizados para que landing page, autenticação, dashboards e fluxos operacionais tenham a mesma linguagem visual.
+
+A tela de Anamnese foi reconstruída integralmente com hierarquia tipográfica, cards de seleção de sexo com estado ativo e indicador de check, inputs táteis, slider de dias com badge de valor, chips de restrições, sidebar premium do Método Felipe Ferreira, aviso de segurança e CTA responsivo. As telas de aluno, administrador, treino, check-in, cadastro, login e redefinição passaram pela normalização de classes legadas de tema claro para superfícies e textos dark de alto contraste. A lógica de autenticação, carregamento, envio de formulários e contratos da API foi preservada.
+
+Após o redesign, `npm run typecheck` e `npm run build` do frontend foram executados novamente com sucesso, gerando as 11 rotas da aplicação sem erros.
