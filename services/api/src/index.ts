@@ -25,8 +25,13 @@ async function buildServer() {
 
   // Normaliza e limpa as origens cadastradas no .env (remove barras finais e espaços)
   const configuredOrigins = new Set(
-    (env.WEB_ORIGIN || '')
-      .split(',')
+    [
+      'https://evotrainer.com.br',
+      'https://www.evotrainer.com.br',
+      'https://felipepersonal.com',
+      'https://www.felipepersonal.com',
+      ...(env.WEB_ORIGIN || '').split(','),
+    ]
       .map((origin) => origin.trim().replace(/\/+$/, ''))
       .filter(Boolean),
   );

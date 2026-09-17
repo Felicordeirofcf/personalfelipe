@@ -123,7 +123,7 @@ export default function AnamnesePage() {
                   <legend className="field-label">Sexo biológico para personalização biomecânica</legend>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
                     {([{ value: 'FEMALE', label: 'Feminino', description: 'Ênfase em glúteos e membros inferiores' }, { value: 'MALE', label: 'Masculino', description: 'Ênfase equilibrada em tronco e pernas' }] as const).map((option) => (
-                      <label key={option.value} className={`cursor-pointer rounded-2xl border p-4 transition ${form.gender === option.value ? 'border-lime-600 bg-lime-50' : 'border-ink/10 bg-white hover:border-lime-500/50'}`}>
+                      <label key={option.value} className={`cursor-pointer rounded-2xl border p-4 font-bold transition ${form.gender === option.value ? 'border-emerald-300 bg-emerald-400 text-[#06110e]' : 'border-slate-700 bg-[#131B2E] text-slate-200 hover:border-emerald-400/50'}`}>
                         <input className="sr-only" type="radio" name="gender" value={option.value} checked={form.gender === option.value} onChange={() => setForm({ ...form, gender: option.value })} />
                         <strong className="block">{option.label}</strong><span className="text-xs text-ink/55">{option.description}</span>
                       </label>
