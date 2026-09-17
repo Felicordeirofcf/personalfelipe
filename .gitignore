@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+.env
+*.log
+.DS_Store
+coverage/
+services/api/node_modules/
+services/web/node_modules/
+services/api/dist/
+services/web/.next/

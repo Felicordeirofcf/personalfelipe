@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+}
+
+enum WorkoutStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  OVERDUE
+  CANCELED
+}
+
+model User {
+  id                    String             @id @default(cuid())
+  name                  String
+  email                 String             @unique
+  phone                 String?
+  role                  UserRole
+  subscriptionStatus    SubscriptionStatus @default(INACTIVE)
+  mercadoPagoCustomerId String?            @unique
+  createdAt             DateTime           @default(now())
+  anamneses             Anamnesis[]
+  workoutPlans          WorkoutPlan[]
+  workoutLogs           WorkoutLog[]
+  checkIns              CheckIn[]
+  subscriptions         Subscription[]
+}
+
+model Anamnesis {
+  id             String   @id @default(cuid())
+  userId         String
+  goal           String
+  experience     String
+  weeklyDays     Int
+  injuries       String[]
+  availableEquip String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model WorkoutPlan {
+  id        String        @id @default(cuid())
+  userId    String
+  status    WorkoutStatus @default(DRAFT)
+  rationale String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  splits    Split[]
+
+  @@index([userId, status])
+}
+
+model Split {
+  id            String          @id @default(cuid())
+  workoutPlanId String
+  name          String
+  focus         String
+  order         Int
+  workoutPlan   WorkoutPlan     @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  exercises     SplitExercise[]
+
+  @@index([workoutPlanId, order])
+}
+
+model SplitExercise {
+  id          String @id @default(cuid())
+  splitId     String
+  name        String
+  sets        Int
+  reps        String
+  rir         Int
+  restSeconds Int
+  cadence     String?
+  notes       String?
+  videoUrl    String?
+  order       Int
+  split       Split  @relation(fields: [splitId], references: [id], onDelete: Cascade)
+
+  @@index([splitId, order])
+}
+
+model WorkoutLog {
+  id         String   @id @default(cuid())
+  userId     String
+  exercise   String
+  setNumber  Int
+  weightUsed Float
+  repsDone   Int
+  rpe        Float?
+  loggedAt   DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, exercise, loggedAt])
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  userId       String
+  painLevel    Int
+  painLocation String?
+  fatigueLevel Int
+  weightKg     Float?
+  notes        String?
+  photoUrls    String[]
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String
+  provider          String             @default("MERCADO_PAGO")
+  externalPaymentId String             @unique
+  externalReference String?
+  status            SubscriptionStatus
+  amount            Float?
+  currency          String?
+  lastEvent         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}

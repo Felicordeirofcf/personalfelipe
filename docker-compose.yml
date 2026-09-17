@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: consultoriafit_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-consultoriafit}
+      POSTGRES_USER: ${POSTGRES_USER:-consultoriafit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-consultoriafit}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - consultoria_net
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: consultoriafit_api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3333}
+      JWT_SECRET: ${JWT_SECRET:-consultoriafit_dev_secret_change_me}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-mock}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-mock_token}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-mock_secret}
+      WHATSAPP_API_URL: ${WHATSAPP_API_URL:-http://localhost:8080}
+      WHATSAPP_API_KEY: ${WHATSAPP_API_KEY:-mock_key}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-consultoriafit}:${POSTGRES_PASSWORD:-consultoriafit}@postgres:5432/${POSTGRES_DB:-consultoriafit}?schema=public
+    ports:
+      - "${PORT:-3333}:${PORT:-3333}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - consultoria_net
+
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3333/api}
+    container_name: consultoriafit_web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3333/api}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - consultoria_net
+
+volumes:
+  postgres_data:
+
+networks:
+  consultoria_net:
+    driver: bridge
