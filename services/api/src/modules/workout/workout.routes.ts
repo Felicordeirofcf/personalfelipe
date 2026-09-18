@@ -9,23 +9,34 @@ import { sendWorkoutApprovedWhatsApp } from '../notifications/whatsapp.service';
 import { getActiveWorkoutForStudent } from './workout.service';
 import { toWorkoutView, workoutInclude } from './workout.view';
 
-const GenerateWorkoutSchema = z.object({
-  anamnesisId: z.string().trim().min(1).optional(),
-  studentId: z.string().trim().min(1).optional(),
-  userId: z.string().trim().min(1).optional(),
-  methodology: z.string().trim().min(1).optional(),
-  previousExercises: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
-  level: z.string().optional(),
-  goal: z.string().optional(),
-  excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
-}).passthrough();
+const GenerateWorkoutSchema = z
+  .object({
+    anamnesisId: z.string().trim().min(1).optional(),
+    studentId: z.string().trim().min(1).optional(),
+    userId: z.string().trim().min(1).optional(),
+    methodology: z.string().trim().min(1).optional(),
+    previousExercises: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
+    level: z.string().optional(),
+    goal: z.string().optional(),
+    excludeExerciseNames: z.array(z.string().trim().min(2).max(120)).max(100).optional(),
+  })
+  .passthrough();
+
 const ParamsSchema = z.object({ id: z.string().trim().min(1) });
 const StudentParamsSchema = z.object({ userId: z.string().trim().min(1) });
-const SessionSchema = z.object({ userId: z.string().trim().min(1), workoutId: z.string().trim().min(1).optional(), dayTitle: z.string().trim().min(2).max(120) }).strict();
+const SessionSchema = z
+  .object({
+    userId: z.string().trim().min(1),
+    workoutId: z.string().trim().min(1).optional(),
+    dayTitle: z.string().trim().min(2).max(120),
+  })
+  .strict();
+
 const ListQuerySchema = z.object({
   status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']).optional(),
   userId: z.string().trim().min(1).optional(),
 });
+
 const WorkoutLogSchema = z
   .object({
     userId: z.string().trim().min(1),
@@ -57,7 +68,10 @@ export async function approveWorkoutById(id: string, logger: FastifyBaseLogger) 
       data: { status: 'ACTIVE' },
       include: workoutInclude,
     });
-    await tx.user.update({ where: { id: current.userId }, data: { subscriptionStatus: 'ACTIVE' } });
+    await tx.user.update({
+      where: { id: current.userId },
+      data: { subscriptionStatus: 'ACTIVE', updatedAt: new Date() },
+    });
     return published;
   });
 
@@ -94,6 +108,7 @@ export async function workoutRoutes(app: FastifyInstance) {
         });
         targetAnamnesisId = latestAnamnesis?.id;
       }
+
       if (!targetAnamnesisId) {
         return reply.badRequest('Informe um anamnesisId válido ou selecione um aluno com anamnese preenchida.');
       }
@@ -109,6 +124,7 @@ export async function workoutRoutes(app: FastifyInstance) {
       try {
         const previousExercises = parsed.data.previousExercises ?? parsed.data.excludeExerciseNames ?? [];
         const { plan, mode } = await generateWorkoutPlan(anamnesis, previousExercises, parsed.data.methodology);
+
         const saved = await prisma.$transaction(async (tx) => {
           await tx.workoutPlan.updateMany({
             where: { userId: anamnesis.userId, status: 'DRAFT' },
@@ -130,8 +146,8 @@ export async function workoutRoutes(app: FastifyInstance) {
                       name: item.name,
                       sets: item.sets,
                       reps: item.reps,
-                      rir: item.rir,
-                      restSeconds: item.restSeconds,
+                      rir: item.rir ?? 2,
+                      restSeconds: item.restSeconds ?? 60,
                       cadence: item.cadence,
                       notes: item.notes,
                       videoUrl: item.videoUrl,
@@ -146,12 +162,29 @@ export async function workoutRoutes(app: FastifyInstance) {
         });
 
         return reply.status(201).send({ workout: toWorkoutView(saved), generationMode: mode });
-      } catch (error) {
+      } catch (error: any) {
+        request.log.error({ err: error }, 'Erro ao gerar o treino');
+
         if (error instanceof AiGenerationError) {
-          request.log.error({ error: error.details }, error.message);
-          return reply.status(502).send({ error: error.message });
+          return reply.status(502).send({
+            error: 'AiGenerationError',
+            message: error.message,
+            details: error.details,
+          });
         }
-        throw error;
+
+        if (error instanceof z.ZodError) {
+          return reply.status(422).send({
+            error: 'ValidationError',
+            message: 'O retorno da IA não passou no formato esperado.',
+            details: error.flatten().fieldErrors,
+          });
+        }
+
+        return reply.status(500).send({
+          error: 'GenerationFailed',
+          message: error?.message || 'Falha inesperada ao processar o treino.',
+        });
       }
     },
   );
@@ -227,8 +260,8 @@ export async function workoutRoutes(app: FastifyInstance) {
                     name: item.name,
                     sets: item.sets,
                     reps: item.reps,
-                    rir: item.rir,
-                    restSeconds: item.restSeconds,
+                    rir: item.rir ?? 2,
+                    restSeconds: item.restSeconds ?? 60,
                     cadence: item.cadence,
                     notes: item.notes,
                     videoUrl: item.videoUrl,
@@ -320,7 +353,14 @@ export async function workoutRoutes(app: FastifyInstance) {
         return reply.notFound('Exercício não encontrado no treino ativo do aluno.');
       }
 
-      const log = await prisma.workoutLog.create({ data: { ...parsed.data, weightUsed: parsed.data.weightUsed ?? 0, repsDone: parsed.data.repsDone ?? 0 } });
+      const log = await prisma.workoutLog.create({
+        data: {
+          ...parsed.data,
+          weightUsed: parsed.data.weightUsed ?? 0,
+          repsDone: parsed.data.repsDone ?? 0,
+        },
+      });
+
       return reply.status(201).send({
         log: {
           id: log.id,
@@ -344,7 +384,10 @@ export async function workoutRoutes(app: FastifyInstance) {
       if (!parsed.success) return reply.badRequest('Dados da sessão inválidos.');
       const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
       if (ownershipError) return ownershipError;
-      const activeStudent = await prisma.user.findFirst({ where: { id: parsed.data.userId, role: 'STUDENT', subscriptionStatus: 'ACTIVE' }, select: { id: true } });
+      const activeStudent = await prisma.user.findFirst({
+        where: { id: parsed.data.userId, role: 'STUDENT', subscriptionStatus: 'ACTIVE' },
+        select: { id: true },
+      });
       if (!activeStudent) return reply.status(402).send({ error: 'Acesso ao treino bloqueado.' });
       const session = await prisma.workoutSession.create({ data: parsed.data });
       return reply.status(201).send({ session });
@@ -359,7 +402,11 @@ export async function workoutRoutes(app: FastifyInstance) {
       if (!parsed.success) return reply.badRequest('Identificador de aluno inválido.');
       const ownershipError = ensureOwnStudentResource(request, reply, parsed.data.userId);
       if (ownershipError) return ownershipError;
-      const sessions = await prisma.workoutSession.findMany({ where: { userId: parsed.data.userId }, orderBy: { completedAt: 'desc' }, take: 90 });
+      const sessions = await prisma.workoutSession.findMany({
+        where: { userId: parsed.data.userId },
+        orderBy: { completedAt: 'desc' },
+        take: 90,
+      });
       return { sessions };
     },
   );
@@ -400,7 +447,8 @@ export async function workoutRoutes(app: FastifyInstance) {
       if (ownershipError) return ownershipError;
 
       const result = await getActiveWorkoutForStudent(parsed.data.userId);
-      if (!result) return reply.notFound('O aluno ainda não possui um treino ativo.');
+      // Retorna 200 com workout null para não sujar o console com 404
+      if (!result) return reply.status(200).send({ workout: null });
       return result;
     },
   );
