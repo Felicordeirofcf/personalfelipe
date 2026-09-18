@@ -17,7 +17,10 @@ const MockPaymentSchema = z.object({
   external_reference: z.string().nullable().optional(),
   transaction_amount: z.number().nullable().optional(),
   currency_id: z.string().nullable().optional(),
-  payer: z.object({ email: z.string().email().nullable().optional(), id: z.union([z.string(), z.number()]).nullable().optional() }).nullable().optional(),
+  payer: z.object({
+    email: z.string().email().nullable().optional(),
+    id: z.union([z.string(), z.number()]).nullable().optional(),
+  }).nullable().optional(),
   metadata: z.object({ user_id: z.string().nullable().optional() }).nullable().optional(),
 }).passthrough();
 
@@ -54,30 +57,100 @@ async function findStudent(payment: MercadoPagoPayment) {
 }
 
 export async function mercadoPagoRoutes(app: FastifyInstance) {
-  app.post('/checkout', { preHandler: authenticatedGuard, schema: { tags: ['Pagamentos'], summary: 'Cria checkout de planilha personalizada por R$ 40,00' } }, async (request, reply) => {
-    const userId = request.user.sub;
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true } });
-    if (!user) return reply.notFound('Aluno não encontrado.');
-    const origin = env.WEB_ORIGIN.split(',')[0]?.trim() || 'http://localhost:3000';
-    const preferencePayload = {
-      items: [{ title: 'Planilha de Treino Personalizada - ConsultoriaFit', quantity: 1, unit_price: 40, currency_id: 'BRL' }],
-      external_reference: user.id,
-      payer: { name: user.name, email: user.email },
-      back_urls: { success: `${origin}/anamnese?payment=success`, failure: `${origin}/cadastro?payment=failure`, pending: `${origin}/anamnese?payment=pending` },
-      auto_return: 'approved',
-      notification_url: `${(env.API_PUBLIC_URL ?? origin).replace(/\/$/, '')}/api/webhooks/mercadopago`,
-    };
-    if (isMercadoPagoMockMode()) {
-      await prisma.payment.create({ data: { userId: user.id, status: 'pending', amount: 40 } });
-      return reply.send({ initPoint: `${origin}/anamnese?payment=pending&mock=1` });
+  app.post(
+    '/checkout',
+    {
+      preHandler: authenticatedGuard,
+      schema: { tags: ['Pagamentos'], summary: 'Cria checkout de planilha personalizada por R$ 40,00' },
+    },
+    async (request, reply) => {
+      const userId = request.user.sub;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true },
+      });
+
+      if (!user) return reply.notFound('Aluno não encontrado.');
+
+      // Garante o domínio correto de produção sem cair em domínios legados
+      const configuredOrigin = env.WEB_ORIGIN?.split(',')[0]?.trim();
+      const origin =
+        configuredOrigin && !configuredOrigin.includes('felipepersonal.com')
+          ? configuredOrigin
+          : 'https://evotrainer.com.br';
+
+      const accessToken = env.MP_ACCESS_TOKEN ?? env.MERCADO_PAGO_ACCESS_TOKEN;
+      if (!accessToken || accessToken === 'mock_secret' || accessToken.trim() === '') {
+        request.log.error('MP_ACCESS_TOKEN não está definido no ambiente da API.');
+        return reply.status(500).send({
+          error: 'Serviço de pagamentos indisponível. Credencial do Mercado Pago não configurada.',
+        });
+      }
+
+      const preferencePayload = {
+        items: [
+          {
+            title: 'Planilha de Treino Personalizada - ConsultoriaFit',
+            quantity: 1,
+            unit_price: 40.0,
+            currency_id: 'BRL',
+          },
+        ],
+        external_reference: user.id,
+        payer: {
+          name: user.name,
+          email: user.email,
+        },
+        back_urls: {
+          success: `${origin}/anamnese?payment=success`,
+          failure: `${origin}/cadastro?payment=failure`,
+          pending: `${origin}/anamnese?payment=pending`,
+        },
+        auto_return: 'approved',
+        notification_url: `${(env.API_PUBLIC_URL ?? origin).replace(/\/$/, '')}/api/webhooks/mercadopago`,
+      };
+
+      const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferencePayload),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        request.log.error({ status: response.status, errorBody }, 'Falha na resposta da API Mercado Pago');
+        return reply.status(502).send({
+          error: 'Não foi possível gerar a preferência de pagamento no Mercado Pago.',
+          details: errorBody,
+        });
+      }
+
+      const preference = (await response.json()) as {
+        id: string;
+        init_point?: string;
+        sandbox_init_point?: string;
+      };
+
+      await prisma.payment.create({
+        data: {
+          userId: user.id,
+          mpPreferenceId: preference.id,
+          status: 'pending',
+          amount: 40.0,
+        },
+      });
+
+      const initPoint = preference.init_point ?? preference.sandbox_init_point;
+      if (!initPoint) {
+        return reply.status(502).send({ error: 'Mercado Pago não retornou URL de pagamento.' });
+      }
+
+      return reply.send({ initPoint });
     }
-    const accessToken = env.MP_ACCESS_TOKEN ?? env.MERCADO_PAGO_ACCESS_TOKEN;
-    const response = await fetch('https://api.mercadopago.com/checkout/preferences', { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(preferencePayload) });
-    if (!response.ok) return reply.status(502).send({ error: 'Não foi possível criar o checkout Mercado Pago.' });
-    const preference = await response.json() as { id: string; init_point?: string; sandbox_init_point?: string };
-    await prisma.payment.create({ data: { userId: user.id, mpPreferenceId: preference.id, status: 'pending', amount: 40 } });
-    return { initPoint: preference.init_point ?? preference.sandbox_init_point };
-  });
+  );
 
   app.post(
     '/mercadopago',
@@ -102,7 +175,7 @@ export async function mercadoPagoRoutes(app: FastifyInstance) {
         payment = await getMercadoPagoPayment(paymentId, body.data.mockPayment);
       } catch (error) {
         request.log.error({ paymentId, error }, 'Falha ao consultar pagamento no Mercado Pago.');
-        return reply.status(isMercadoPagoMockMode() ? 400 : 502).send({
+        return reply.status(502).send({
           error: error instanceof Error ? error.message : 'Falha ao consultar pagamento.',
         });
       }
@@ -144,14 +217,22 @@ export async function mercadoPagoRoutes(app: FastifyInstance) {
         }),
         prisma.payment.upsert({
           where: { mpPaymentId: String(payment.id) },
-          update: { status: subscriptionStatus === 'ACTIVE' ? 'approved' : payment.status, amount: payment.transaction_amount ?? 40 },
-          create: { userId: student.id, mpPaymentId: String(payment.id), status: subscriptionStatus === 'ACTIVE' ? 'approved' : payment.status, amount: payment.transaction_amount ?? 40 },
+          update: {
+            status: subscriptionStatus === 'ACTIVE' ? 'approved' : payment.status,
+            amount: payment.transaction_amount ?? 40,
+          },
+          create: {
+            userId: student.id,
+            mpPaymentId: String(payment.id),
+            status: subscriptionStatus === 'ACTIVE' ? 'approved' : payment.status,
+            amount: payment.transaction_amount ?? 40,
+          },
         }),
       ]);
 
       request.log.info({ paymentId, userId: student.id, subscriptionStatus }, 'Pagamento sincronizado.');
       return reply.status(200).send({ received: true, processed: true, userId: student.id, subscriptionStatus });
-    },
+    }
   );
 }
 
