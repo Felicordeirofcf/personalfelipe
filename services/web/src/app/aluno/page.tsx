@@ -4,7 +4,7 @@ import { Button, Notice, PageIntro, Panel } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
 import { getSessionUser, getToken, saveSession } from '@/lib/auth';
 import { User } from '@/types';
-import { ArrowRight, CalendarDays, CheckCircle2, FileDown, Flame, ShieldCheck, Trophy } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, FileDown, Flame, ShieldCheck, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -41,15 +41,14 @@ export default function AlunoPage() {
         setUser(currentUser);
         saveSession(token, currentUser);
 
-        // 1. TRAVA ABSOLUTA: Exige a anamnese primeiro, mesmo se o aluno estiver INACTIVE
-        if (!currentUser.hasCompletedAnamnesis) {
+        // Se ainda não fez a anamnese, redireciona imediatamente
+        if (currentUser.hasCompletedAnamnesis === false) {
           router.replace('/anamnese');
           return;
         }
 
-        // 2. Se já completou a anamnese, verifica se o pagamento/ativação está pendente
         if (currentUser.subscriptionStatus !== 'ACTIVE') {
-          setAccessMessage('Seu cadastro e anamnese foram recebidos e aguardam ativação do personal. As planilhas e treinos serão liberados após a ativação.');
+          setAccessMessage('Seu cadastro foi recebido e aguarda ativação do personal. As planilhas e treinos serão liberados após a ativação.');
           setChecking(false);
           return;
         }
@@ -143,6 +142,28 @@ export default function AlunoPage() {
           </Button>
         }
       />
+
+      {/* BANNER / BOTÃO DE ANAMNESE OBRIGATÓRIA */}
+      <Panel className="mb-7 border-emerald-500/40 bg-emerald-950/20 p-5">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl border border-emerald-400/30 bg-emerald-500/10 text-emerald-400">
+              <ClipboardCheck size={20} />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-white">Anamnese do Aluno</h3>
+              <p className="text-xs text-zinc-400">
+                {user?.hasCompletedAnamnesis
+                  ? 'Sua avaliação já foi enviada. Clique caso precise reenviar ou atualizar.'
+                  : 'Obrigatório: Preencha seus dados biomecânicos para o personal prescrever seu treino.'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={() => router.push('/anamnese')} className="w-full sm:w-auto">
+            {user?.hasCompletedAnamnesis ? 'Atualizar Anamnese' : 'Preencher Anamnese Agora →'}
+          </Button>
+        </div>
+      </Panel>
 
       {accessMessage ? (
         <div className="mb-7">

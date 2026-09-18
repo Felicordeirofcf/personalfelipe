@@ -42,9 +42,10 @@ type PublicUser = {
 };
 
 function publicUser(user: any): PublicUser {
+  // Trata relação 1:N (array) ou 1:1 (objeto direto) retornada pelo Prisma
   const hasCompletedAnamnesis = Array.isArray(user.anamnesis)
     ? user.anamnesis.length > 0
-    : Boolean(user.anamnesis || user.hasCompletedAnamnesis);
+    : Boolean(user.anamnesis);
 
   return {
     id: user.id,
@@ -82,6 +83,7 @@ export async function authRoutes(app: FastifyInstance) {
         cpf,
         role: 'STUDENT',
         passwordHash: await hashPassword(parsed.data.password),
+        updatedAt: new Date(),
       },
       include: {
         anamnesis: {
@@ -155,7 +157,10 @@ export async function authRoutes(app: FastifyInstance) {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+      data: {
+        passwordHash: await hashPassword(parsed.data.newPassword),
+        updatedAt: new Date(),
+      },
     });
 
     return { changed: true };
@@ -200,7 +205,10 @@ export async function authRoutes(app: FastifyInstance) {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: record.userId },
-        data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+        data: {
+          passwordHash: await hashPassword(parsed.data.newPassword),
+          updatedAt: new Date(),
+        },
       }),
       prisma.passwordResetToken.update({
         where: { id: record.id },

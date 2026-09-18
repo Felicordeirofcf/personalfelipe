@@ -37,10 +37,12 @@ export async function anamnesisRoutes(app: FastifyInstance) {
         });
       }
 
+      // Permite encontrar o aluno mesmo que esteja INACTIVE
       const student = await prisma.user.findFirst({
         where: { id: parsed.data.userId, role: 'STUDENT' },
         select: { id: true, gender: true },
       });
+
       if (!student) {
         return reply.notFound('Aluno não encontrado.');
       }
@@ -49,7 +51,7 @@ export async function anamnesisRoutes(app: FastifyInstance) {
         return reply.forbidden('Você só pode enviar a sua própria avaliação.');
       }
 
-      // Salva a anamnese e atualiza o gênero no usuário em uma única transação
+      // Salva a anamnese e atualiza gênero e updatedAt do utilizador
       const [anamnesis] = await prisma.$transaction([
         prisma.anamnesis.create({
           data: {
@@ -65,7 +67,10 @@ export async function anamnesisRoutes(app: FastifyInstance) {
         }),
         prisma.user.update({
           where: { id: student.id },
-          data: { gender: parsed.data.gender },
+          data: {
+            gender: parsed.data.gender,
+            updatedAt: new Date(),
+          },
         }),
       ]);
 
