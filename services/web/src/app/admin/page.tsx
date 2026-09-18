@@ -7,7 +7,21 @@ import { CommercialAdminPanel } from '@/components/commercial-admin-panel';
 import { apiFetch } from '@/lib/api';
 import { hasRole } from '@/lib/auth';
 import { Anamnesis, Workout } from '@/types';
-import { Activity, BrainCircuit, CalendarDays, CircleGauge, Dumbbell, HeartPulse, RefreshCw, Scale, ShieldAlert, Sparkles, UserRound } from 'lucide-react';
+import { 
+  Activity, 
+  BrainCircuit, 
+  CalendarDays, 
+  CheckCircle2, 
+  CircleGauge, 
+  Dumbbell, 
+  HeartPulse, 
+  RefreshCw, 
+  Scale, 
+  Search, 
+  ShieldAlert, 
+  Sparkles, 
+  UserRound 
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -72,9 +86,17 @@ export default function AdminPage() {
     setGeneratingId(anamnesisId);
     setMessage({ kind: 'info', text: 'Gerando uma prescrição estruturada. Isso pode levar alguns segundos.' });
     try {
+      const targetUser = anamneses.find((entry) => entry.id === anamnesisId)?.user;
       const response = await apiFetch<{ workout: Workout; generationMode: 'mock' | 'openai' }>('/workouts/generate', {
         method: 'POST',
-        body: JSON.stringify({ anamnesisId, studentId: anamneses.find((entry) => entry.id === anamnesisId)?.user.id, userId: anamneses.find((entry) => entry.id === anamnesisId)?.user.id, excludeExerciseNames: workouts.filter((item) => item.userId === anamneses.find((entry) => entry.id === anamnesisId)?.user.id).flatMap((item) => item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))) }),
+        body: JSON.stringify({ 
+          anamnesisId, 
+          studentId: targetUser?.id, 
+          userId: targetUser?.id, 
+          excludeExerciseNames: workouts
+            .filter((item) => item.userId === targetUser?.id)
+            .flatMap((item) => item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))) 
+        }),
       });
       setWorkouts((current) => [response.workout, ...current.filter((item) => item.id !== response.workout.id)]);
       setSelectedWorkout(response.workout);
@@ -104,7 +126,7 @@ export default function AdminPage() {
       <PageIntro
         eyebrow="Central do personal"
         title="Decisão técnica em primeiro plano."
-        description="Veja novas avaliações, gere uma base com IA e ajuste cada variável antes de liberar o plano para o aluno."
+        description="Veja novas avaliações, selecione o aluno diretamente na lista e ajuste cada variável antes de liberar o plano."
         action={<Button variant="ghost" onClick={loadData} loading={loading}><RefreshCw size={17} /> Atualizar dados</Button>}
       />
 
@@ -125,74 +147,219 @@ export default function AdminPage() {
 
       <CommercialAdminPanel />
 
-      <Panel className="mb-7 p-5 md:p-6">
-        <div className="grid gap-5 lg:grid-cols-[minmax(260px,360px)_1fr] lg:items-end">
-          <label className="block">
-            <span className="field-label">Aluno em atendimento</span>
-            <select className="field-control" value={selectedStudentId} onChange={(event) => setSelectedStudentId(event.target.value)}>
-              <option value="">Selecione um aluno</option>
-              {anamneses.map((item) => <option key={item.user.id} value={item.user.id}>{item.user.name} · {item.user.email}</option>)}
-            </select>
-          </label>
-          {selectedAnamnesis ? <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-bold text-white">{selectedAnamnesis.user.name}</p><p className="text-xs text-zinc-400">{selectedAnamnesis.user.email}</p></div><StatusBadge status={selectedAnamnesis.latestPlan?.status ?? 'PENDING'} /></div>
-            <div className="mt-3 grid gap-2 text-xs text-zinc-300 sm:grid-cols-3"><span><b className="text-zinc-500">Objetivo</b><br />{selectedAnamnesis.goal}</span><span><b className="text-zinc-500">Frequência</b><br />{selectedAnamnesis.weeklyDays}x por semana</span><span><b className="text-zinc-500">Restrições</b><br />{selectedAnamnesis.injuries.length ? selectedAnamnesis.injuries.join(', ') : 'Nenhuma informada'}</span></div>
-          </div> : <p className="text-sm text-zinc-400">Selecione um aluno para carregar a anamnese, o histórico e o plano atual.</p>}
+      {/* CARD DO ALUNO SELECIONADO (Substitui o menu dropdown) */}
+      <Panel className="mb-7 p-5 md:p-6 border-emerald-500/20 bg-zinc-950/40">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">
+              Aluno em atendimento selecionado
+            </span>
+            <div className="mt-1 flex items-center gap-3">
+              <h2 className="font-display text-2xl font-bold text-white">
+                {selectedAnamnesis ? selectedAnamnesis.user.name : 'Nenhum aluno selecionado'}
+              </h2>
+              {selectedAnamnesis && (
+                <StatusBadge status={selectedAnamnesis.latestPlan?.status ?? (selectedAnamnesis.pending ? 'PENDING' : 'ACTIVE')} />
+              )}
+            </div>
+            <p className="text-xs text-zinc-400">
+              {selectedAnamnesis ? selectedAnamnesis.user.email : 'Clique em qualquer aluno na lista abaixo para carregar sua ficha técnica.'}
+            </p>
+          </div>
+
+          {selectedAnamnesis && (
+            <div className="grid grid-cols-3 gap-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 text-xs">
+              <div>
+                <b className="block text-zinc-500">Objetivo</b>
+                <span className="text-zinc-200">{selectedAnamnesis.goal}</span>
+              </div>
+              <div>
+                <b className="block text-zinc-500">Frequência</b>
+                <span className="text-zinc-200">{selectedAnamnesis.weeklyDays}x por semana</span>
+              </div>
+              <div>
+                <b className="block text-zinc-500">Restrições</b>
+                <span className="text-zinc-200">
+                  {selectedAnamnesis.injuries.length ? selectedAnamnesis.injuries.join(', ') : 'Nenhuma'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </Panel>
 
-      <div className="grid items-start gap-7 xl:grid-cols-[390px_1fr]">
+      <div className="grid items-start gap-7 xl:grid-cols-[400px_1fr]">
         <div className="space-y-5 xl:sticky xl:top-28">
           <Panel className="overflow-hidden">
             <div className="border-b border-zinc-800 px-5 py-4">
-              <div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold text-white">Fila de avaliações</h2><span className="rounded-full bg-zinc-950 px-2.5 py-1 text-[10px] font-black text-emerald-300">{anamneses.length}</span></div>
-              <p className="mt-1 text-xs text-zinc-400">Mais recentes primeiro</p>
-              <input className="field-control mt-4" placeholder="Buscar aluno..." value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} />
-              <div className="mt-3 flex gap-2"><button type="button" onClick={() => setStudentFilter('ALL')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ALL' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Todos</button><button type="button" onClick={() => setStudentFilter('PENDING')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'PENDING' ? 'bg-amber-400 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Pendentes</button><button type="button" onClick={() => setStudentFilter('ACTIVE')} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ACTIVE' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}>Liberados</button></div>
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-lg font-bold text-white">Fila de alunos</h2>
+                <span className="rounded-full bg-zinc-950 px-2.5 py-1 text-[10px] font-black text-emerald-300">
+                  {visibleAnamneses.length} de {anamneses.length}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-zinc-400">Clique no card para carregar o aluno</p>
+
+              {/* Barra de Pesquisa Rápida */}
+              <div className="relative mt-4">
+                <Search className="absolute left-3 top-3 text-zinc-500" size={16} />
+                <input 
+                  className="field-control pl-9 text-sm" 
+                  placeholder="Buscar por nome ou e-mail..." 
+                  value={studentSearch} 
+                  onChange={(event) => setStudentSearch(event.target.value)} 
+                />
+              </div>
+
+              {/* Filtros de Status */}
+              <div className="mt-3 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => setStudentFilter('ALL')} 
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ALL' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}
+                >
+                  Todos
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setStudentFilter('PENDING')} 
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'PENDING' ? 'bg-amber-400 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}
+                >
+                  Pendentes
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setStudentFilter('ACTIVE')} 
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold ${studentFilter === 'ACTIVE' ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300'}`}
+                >
+                  Liberados
+                </button>
+              </div>
             </div>
-            <div className="max-h-[580px] space-y-3 overflow-y-auto p-3">
+
+            {/* Lista Rolável com Seleção Ativa */}
+            <div className="max-h-[620px] space-y-3 overflow-y-auto p-3">
               {loading ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Carregando avaliações...</p> : null}
-              {!loading && anamneses.length === 0 ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Nenhuma anamnese cadastrada.</p> : null}
-              {visibleAnamneses.map((item) => (
-                <article key={item.id} role="button" tabIndex={0} onClick={() => router.push(`/admin/aluno/${item.user.id}`)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') router.push(`/admin/aluno/${item.user.id}`); }} className={`cursor-pointer rounded-2xl border p-4 transition hover:border-emerald-400/50 ${item.pending ? 'border-emerald-400/40 bg-emerald-950/20' : 'border-zinc-800 bg-zinc-900/60'}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div><p className="font-display font-bold text-white">{item.user.name}</p><p className="mt-1 text-xs font-semibold text-zinc-400">{experienceLabels[item.experience]}</p></div>
-                    {item.pending ? <StatusBadge status="PENDING" /> : item.latestPlan ? <StatusBadge status={item.latestPlan.status} /> : null}
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-sm leading-5 text-zinc-300">{item.goal}</p>
-                  {item.latestCheckIn ? (
-                    <div className={`mt-3 rounded-xl border p-3 ${item.latestCheckIn.painLevel >= 5 ? 'border-red-500/30 bg-red-950/30' : 'border-emerald-500/25 bg-emerald-950/20'}`}>
-                      <div className="flex items-center justify-between gap-2"><span className={`inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider ${item.latestCheckIn.painLevel >= 5 ? 'text-red-300' : 'text-emerald-300'}`}><HeartPulse size={13} /> Último check-in</span><span className="text-[10px] font-bold text-zinc-500">{new Date(item.latestCheckIn.createdAt).toLocaleDateString('pt-BR')}</span></div>
-                      <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] font-bold text-zinc-300"><span className="inline-flex items-center gap-1"><HeartPulse size={12} /> Dor {item.latestCheckIn.painLevel}/10</span><span className="inline-flex items-center gap-1"><Activity size={12} /> Fadiga {item.latestCheckIn.fatigueLevel}/10</span><span className="inline-flex items-center gap-1"><Scale size={12} /> {item.latestCheckIn.weightKg ? `${item.latestCheckIn.weightKg} kg` : '—'}</span></div>
-                      {item.latestCheckIn.painLocation ? <p className="mt-2 truncate text-[11px] font-semibold text-zinc-400">Local: {item.latestCheckIn.painLocation}</p> : null}
+              {!loading && visibleAnamneses.length === 0 ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Nenhum aluno encontrado.</p> : null}
+              
+              {visibleAnamneses.map((item) => {
+                const isSelected = item.user.id === selectedStudentId;
+
+                return (
+                  <article 
+                    key={item.id} 
+                    role="button" 
+                    tabIndex={0} 
+                    onClick={() => setSelectedStudentId(item.user.id)} 
+                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setSelectedStudentId(item.user.id); }} 
+                    className={`cursor-pointer rounded-2xl border p-4 transition ${
+                      isSelected 
+                        ? 'border-emerald-400 bg-emerald-950/30 shadow-lg shadow-emerald-950/40 ring-1 ring-emerald-400' 
+                        : item.pending 
+                        ? 'border-emerald-400/30 bg-emerald-950/10 hover:border-emerald-400/60' 
+                        : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className={`font-display font-bold ${isSelected ? 'text-emerald-300' : 'text-white'}`}>
+                            {item.user.name}
+                          </p>
+                          {isSelected && <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />}
+                        </div>
+                        <p className="mt-0.5 text-xs font-semibold text-zinc-400">{item.user.email}</p>
+                        <p className="mt-1 text-[11px] font-bold text-zinc-500">{experienceLabels[item.experience]}</p>
+                      </div>
+                      {item.pending ? <StatusBadge status="PENDING" /> : item.latestPlan ? <StatusBadge status={item.latestPlan.status} /> : null}
                     </div>
-                  ) : <p className="mt-3 rounded-xl bg-zinc-900/70 px-3 py-2 text-[11px] font-semibold text-zinc-400">Nenhum check-in registrado.</p>}
-                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-zinc-400">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-zinc-800 px-2 py-1 text-zinc-300"><CalendarDays size={13} /> {item.weeklyDays}x/semana</span>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-zinc-800 px-2 py-1 text-zinc-300"><ShieldAlert size={13} /> {item.injuries.length} restrição(ões)</span>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button className="flex-1" loading={generatingId === item.id} onClick={(event) => { event.stopPropagation(); void generate(item.id); }}><Sparkles size={16} /> {item.pending ? 'Gerar com IA' : 'Gerar novamente'}</Button>
-                    {item.latestPlan ? <button className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white" title="Abrir último plano" onClick={(event) => { event.stopPropagation(); const found = workouts.find((workout) => workout.id === item.latestPlan?.id); if (found) setSelectedWorkout(found); }}><CircleGauge size={17} /></button> : null}
-                  </div>
-                </article>
-              ))}
+
+                    <p className="mt-3 line-clamp-2 text-xs leading-5 text-zinc-300">{item.goal}</p>
+
+                    {item.latestCheckIn ? (
+                      <div className={`mt-3 rounded-xl border p-2.5 ${item.latestCheckIn.painLevel >= 5 ? 'border-red-500/30 bg-red-950/30' : 'border-emerald-500/25 bg-emerald-950/20'}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${item.latestCheckIn.painLevel >= 5 ? 'text-red-300' : 'text-emerald-300'}`}>
+                            <HeartPulse size={12} /> Check-in
+                          </span>
+                          <span className="text-[10px] font-bold text-zinc-500">{new Date(item.latestCheckIn.createdAt).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <div className="mt-1.5 grid grid-cols-3 gap-1 text-[10px] font-bold text-zinc-300">
+                          <span>Dor: {item.latestCheckIn.painLevel}/10</span>
+                          <span>Fadiga: {item.latestCheckIn.fatigueLevel}/10</span>
+                          <span>{item.latestCheckIn.weightKg ? `${item.latestCheckIn.weightKg} kg` : '—'}</span>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold text-zinc-400">
+                      <span className="inline-flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 text-zinc-300">
+                        <CalendarDays size={11} /> {item.weeklyDays}x/sem
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 text-zinc-300">
+                        <ShieldAlert size={11} /> {item.injuries.length} restrição(ões)
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <Button 
+                        className="flex-1 text-xs py-2" 
+                        loading={generatingId === item.id} 
+                        onClick={(event) => { 
+                          event.stopPropagation(); 
+                          setSelectedStudentId(item.user.id);
+                          void generate(item.id); 
+                        }}
+                      >
+                        <Sparkles size={14} /> {item.pending ? 'Gerar com IA' : 'Regerar IA'}
+                      </Button>
+                      
+                      {item.latestPlan && (
+                        <button 
+                          className="grid h-9 w-9 place-items-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white" 
+                          title="Abrir treino atual" 
+                          onClick={(event) => { 
+                            event.stopPropagation(); 
+                            setSelectedStudentId(item.user.id);
+                            const found = workouts.find((workout) => workout.id === item.latestPlan?.id); 
+                            if (found) setSelectedWorkout(found); 
+                          }}
+                        >
+                          <CircleGauge size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </Panel>
 
-          {workouts.length > 0 ? (
+          {workouts.length > 0 && (
             <Panel className="p-4">
               <p className="mb-3 px-1 text-xs font-black uppercase tracking-wider text-zinc-400">Histórico de planos</p>
               <div className="space-y-2">
                 {workouts.slice(0, 8).map((item) => (
-                  <button key={item.id} onClick={() => setSelectedWorkout(item)} className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${selectedWorkout?.id === item.id ? 'border-emerald-400 bg-emerald-500 text-zinc-950' : 'border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/50'}`}>
-                    <span className="min-w-0"><span className="block truncate text-sm font-bold">{item.user?.name}</span><span className={`text-[10px] font-semibold ${selectedWorkout?.id === item.id ? 'text-zinc-800' : 'text-zinc-400'}`}>{new Date(item.createdAt).toLocaleDateString('pt-BR')}</span></span>
+                  <button 
+                    key={item.id} 
+                    onClick={() => {
+                      setSelectedWorkout(item);
+                      if (item.userId) setSelectedStudentId(item.userId);
+                    }} 
+                    className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${selectedWorkout?.id === item.id ? 'border-emerald-400 bg-emerald-500 text-zinc-950' : 'border-zinc-800 bg-zinc-900/60 hover:border-emerald-500/50'}`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{item.user?.name}</span>
+                      <span className={`text-[10px] font-semibold ${selectedWorkout?.id === item.id ? 'text-zinc-800' : 'text-zinc-400'}`}>
+                        {new Date(item.createdAt).toLocaleDateString('pt-BR')}
+                      </span>
+                    </span>
                     <StatusBadge status={item.status} />
                   </button>
                 ))}
               </div>
             </Panel>
-          ) : null}
+          )}
         </div>
 
         <Panel className="min-w-0 p-5 md:p-7">
@@ -209,7 +376,15 @@ export default function AdminPage() {
             </>
           ) : (
             <div className="grid min-h-[520px] place-items-center p-8 text-center">
-              <div><span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-300"><BrainCircuit size={28} /></span><h2 className="mt-5 font-display text-2xl font-bold">Pronto para construir</h2><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-400">Escolha uma anamnese na fila e clique em “Gerar com IA”. O plano aparecerá aqui para revisão.</p></div>
+              <div>
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-300">
+                  <BrainCircuit size={28} />
+                </span>
+                <h2 className="mt-5 font-display text-2xl font-bold text-white">Pronto para construir</h2>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-400">
+                  Selecione um aluno na lista ao lado e clique em “Gerar com IA” ou abra um plano do histórico para começar a edição técnica.
+                </p>
+              </div>
             </div>
           )}
         </Panel>
