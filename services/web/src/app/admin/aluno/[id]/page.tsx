@@ -6,7 +6,21 @@ import { WorkoutPrintSheet } from '@/components/workout-print-sheet';
 import { apiFetch } from '@/lib/api';
 import { hasRole } from '@/lib/auth';
 import { Anamnesis, Workout, User } from '@/types';
-import { ArrowLeft, CheckCircle2, RefreshCw, Sparkles, Trash2, UserRound } from 'lucide-react';
+import { 
+  Activity, 
+  AlertTriangle, 
+  ArrowLeft, 
+  CalendarDays, 
+  CheckCircle2, 
+  Dumbbell, 
+  HeartPulse, 
+  RefreshCw, 
+  ShieldAlert, 
+  Sparkles, 
+  Target, 
+  Trash2, 
+  UserRound 
+} from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -41,7 +55,6 @@ export default function AdminStudentPage() {
       setAnamnesis(currentAnamnesis);
       setWorkouts(workoutsResponse.workouts || []);
 
-      // Tenta buscar dados completos via /users, com fallback seguro para a anamnese
       try {
         const usersResponse = await apiFetch<{ users: User[] }>('/users?role=STUDENT');
         const currentStudent = usersResponse.users.find((item) => item.id === studentId) ?? null;
@@ -95,10 +108,9 @@ export default function AdminStudentPage() {
   async function generate() {
     if (!anamnesis || !student) return;
     setGenerating(true);
-    setNotice({ kind: 'info', text: 'Gerando uma nova variação do treino para este aluno...' });
+    setNotice({ kind: 'info', text: 'Gerando prescrição com nova seleção de estímulos e considerando o quadro clínico...' });
 
     try {
-      // Coleta exercícios existentes para variar a prescrição
       const excludeExerciseNames = workouts.flatMap((item) => 
         item.splits.flatMap((split) => split.exercises.map((exercise) => exercise.name))
       );
@@ -115,7 +127,7 @@ export default function AdminStudentPage() {
 
       setWorkouts((current) => [response.workout, ...current]);
       setSelectedWorkout(response.workout);
-      setNotice({ kind: 'success', text: 'Novo treino gerado. Revise e edite antes de liberar.' });
+      setNotice({ kind: 'success', text: 'Treino gerado com novas variações de exercícios. Revise e publique.' });
     } catch (error) {
       setNotice({ kind: 'error', text: error instanceof Error ? error.message : 'Falha ao gerar o treino.' });
     } finally {
@@ -164,7 +176,7 @@ export default function AdminStudentPage() {
       <PageIntro
         eyebrow="Gestão individual"
         title={student?.name ?? 'Aluno'}
-        description="Revise a Anamnese, gere variações, edite a prescrição, ative o acesso e libere somente o plano finalizado."
+        description="Consulte o prontuário biomecânico completo, gere variações inéditas e libere a prescrição final."
         action={
           <Button variant="ghost" onClick={() => router.push('/admin')}>
             <ArrowLeft size={17} /> Voltar ao painel
@@ -183,7 +195,8 @@ export default function AdminStudentPage() {
 
       {student ? (
         <>
-          <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr_1fr]">
+          {/* TOPO: Informações de Cadastro e Status */}
+          <div className="grid gap-5 lg:grid-cols-2">
             <Panel className="p-6">
               <div className="flex items-start gap-4">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-300">
@@ -218,22 +231,64 @@ export default function AdminStudentPage() {
                 </Button>
               </div>
             </Panel>
-
-            <Panel className="p-6">
-              <p className="text-xs font-black uppercase tracking-wider text-zinc-500">Anamnese</p>
-              {anamnesis ? (
-                <>
-                  <p className="mt-2 text-sm font-bold text-white">
-                    {experienceLabels[anamnesis.experience]} · {anamnesis.weeklyDays}x/semana
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-zinc-400">{anamnesis.goal}</p>
-                </>
-              ) : (
-                <p className="mt-2 text-sm text-zinc-400">Sem anamnese cadastrada.</p>
-              )}
-            </Panel>
           </div>
 
+          {/* FICHA TÉCNICA E CLÍNICA COMPLETA */}
+          <Panel className="mt-6 border-amber-500/30 bg-zinc-950/70 p-6">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+              <AlertTriangle className="text-amber-400" size={20} />
+              <h3 className="font-display text-lg font-bold text-white">
+                Prontuário Biomecânico & Clínico do Aluno
+              </h3>
+            </div>
+
+            {anamnesis ? (
+              <div className="mt-4 grid gap-6 md:grid-cols-3">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-400">
+                    <Target size={14} /> Objetivo & Nível
+                  </span>
+                  <p className="mt-2 text-sm font-bold text-white">
+                    {experienceLabels[anamnesis.experience]} · {anamnesis.weeklyDays}x por semana
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-zinc-300">{anamnesis.goal}</p>
+                </div>
+
+                <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-red-400">
+                    <ShieldAlert size={14} /> Patologias, Dores & Lesões
+                  </span>
+                  {anamnesis.injuries && anamnesis.injuries.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {anamnesis.injuries.map((injury, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-lg border border-red-500/40 bg-red-900/40 px-2.5 py-1 text-xs font-bold text-red-200"
+                        >
+                          ⚠️ {injury}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-zinc-400">Nenhuma patologia ou restrição informada.</p>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+                  <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-blue-400">
+                    <Dumbbell size={14} /> Estrutura & Equipamentos
+                  </span>
+                  <p className="mt-2 text-xs leading-relaxed text-zinc-300">
+                    {anamnesis.availableEquip || 'Academia completa padrão'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-zinc-400">O aluno ainda não enviou os dados da anamnese.</p>
+            )}
+          </Panel>
+
+          {/* ÁREA DE PLANOS E PRESCRIÇÃO */}
           <div className="mt-7 grid items-start gap-7 xl:grid-cols-[360px_1fr]">
             <Panel className="p-5">
               <div className="flex items-center justify-between">
@@ -247,7 +302,7 @@ export default function AdminStudentPage() {
                 disabled={!anamnesis}
                 onClick={generate}
               >
-                <Sparkles size={17} /> Gerar novamente
+                <Sparkles size={17} /> Gerar variação inédita
               </Button>
 
               <div className="mt-5 space-y-2">
