@@ -1,25 +1,72 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AppHeader } from '@/components/app-header';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#10b981',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: { default: 'ConsultoriaFit', template: '%s | ConsultoriaFit' },
   description: 'Consultoria online de elite com periodização individualizada e biomecânica aplicada.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'ConsultoriaFit',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: '/icons/icon-192x192.png',
+    apple: '/icons/icon-192x192.png',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+      </head>
       <body>
         <AppHeader />
         <main>{children}</main>
         <footer className="site-footer border-t border-slate-800 bg-[#090D14] px-5 py-10 text-sm text-slate-500">
           <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-3">
-            <div><p className="font-display text-lg font-bold text-white">ConsultoriaFit</p><p className="mt-2 max-w-xs leading-6">Treino individualizado para você evoluir com clareza, estratégia e constância.</p></div>
-            <div><p className="font-extrabold text-slate-200">Contato</p><a className="mt-2 block hover:text-emerald-300" href="mailto:consultoria@evotrainer.com">consultoria@evotrainer.com</a><a className="mt-1 block hover:text-emerald-300" href="https://wa.me/5521987708652">WhatsApp da consultoria</a></div>
-            <div><p className="font-extrabold text-slate-200">Responsabilidade profissional</p><p className="mt-2 leading-6">Felipe Ferreira · CREF 071550-RJ</p><div className="mt-3 flex gap-4 text-xs font-bold"><a href="#" className="hover:text-white">Termos de uso</a><a href="#" className="hover:text-white">Privacidade</a></div></div>
+            <div>
+              <p className="font-display text-lg font-bold text-white">ConsultoriaFit</p>
+              <p className="mt-2 max-w-xs leading-6">
+                Treino individualizado para você evoluir com clareza, estratégia e constância.
+              </p>
+            </div>
+            <div>
+              <p className="font-extrabold text-slate-200">Contato</p>
+              <a className="mt-2 block hover:text-emerald-300" href="mailto:consultoria@evotrainer.com">
+                consultoria@evotrainer.com
+              </a>
+              <a className="mt-1 block hover:text-emerald-300" href="https://wa.me/5521987708652">
+                WhatsApp da consultoria
+              </a>
+            </div>
+            <div>
+              <p className="font-extrabold text-slate-200">Responsabilidade profissional</p>
+              <p className="mt-2 leading-6">Felipe Ferreira · CREF 071550-RJ</p>
+              <div className="mt-3 flex gap-4 text-xs font-bold">
+                <a href="#" className="hover:text-white">Termos de uso</a>
+                <a href="#" className="hover:text-white">Privacidade</a>
+              </div>
+            </div>
           </div>
-          <p className="mx-auto mt-9 max-w-7xl border-t border-slate-800 pt-5 text-xs">© {new Date().getFullYear()} ConsultoriaFit.</p>
+          <p className="mx-auto mt-9 max-w-7xl border-t border-slate-800 pt-5 text-xs">
+            © {new Date().getFullYear()} ConsultoriaFit.
+          </p>
         </footer>
       </body>
     </html>

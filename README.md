@@ -1,231 +1,100 @@
-# ConsultoriaFit
+# 🚀 Felipe Cordeiro | Full-Stack Developer & Solutions Architect
 
-**ConsultoriaFit** é uma aplicação full stack para personal trainers criarem, revisarem e aprovarem prescrições de treino com assistência de inteligência artificial. O sistema também acompanha check-ins, progressão de carga, vídeos demonstrativos, assinatura do aluno, notificações de aprovação e fichas de treino imprimíveis.
+Desenvolvedor Full-Stack focado na criação de ecossistemas digitais escaláveis, soluções orientadas a Inteligência Artificial e automações de alta precisão. Experiência prática na concepção, arquitetura e entrega em produção de aplicações ponta a ponta, unindo interfaces ágeis, microsserviços robustos e fluxos operacionais automatizados.
 
-O projeto está preparado para execução local no **VS Code para Windows** com Docker Desktop e WSL 2. O modo padrão usa um gerador simulado, portanto todo o fluxo pode ser testado sem chave da OpenAI e sem consumo de créditos.
+---
 
-## O que está incluído
+## 🛠️ Stack Tecnológica & Ecossistema
 
-A interface Next.js possui anamnese, check-in periódico, painel do personal com alerta de dor, geração assistida, editor com URL de vídeo, aprovação, ficha A4 e visão do aluno com a carga da sessão anterior. A API Fastify valida as entradas com Zod, documenta as rotas com Swagger, persiste os dados via Prisma e PostgreSQL, recebe webhooks assinados do Mercado Pago e notifica aprovações por um dispatcher HTTP de WhatsApp.
+| Camada | Tecnologias & Ferramentas |
+| :--- | :--- |
+| **Frontend & Mobile** | Next.js (App Router), React, React Native, TypeScript, Tailwind CSS, shadcn/ui |
+| **Backend & APIs** | Node.js, Fastify, Express, NestJS, Python (Flask), RESTful APIs, Webhooks |
+| **Banco de Dados & ORM** | PostgreSQL, SQLite, Supabase, Prisma ORM, Drizzle ORM |
+| **DevOps & Infraestrutura** | Docker, Docker Compose, WSL 2, Cloudflare (Tunnels/DNS), Vercel, Render, GCP |
+| **Inteligência Artificial** | OpenAI API (GPT-4o / GPT-4o-mini), Function Calling, Engenharia de Prompts Clínicos |
+| **Integrações Comerciais** | Mercado Pago, Meta Pixel / CAPI, Bling ERP, Melhor Envio, Nuvemshop |
 
-| Serviço | Tecnologia | Porta padrão | Endereço |
-| --- | --- | ---: | --- |
-| Web | Next.js 16, React 19, Tailwind CSS | 3000 | http://localhost:3000 |
-| API | Node.js 20, Fastify 5, Prisma, Zod | 3333 | http://localhost:3333 |
-| Swagger | OpenAPI e Swagger UI | 3333 | http://localhost:3333/docs |
-| PostgreSQL | PostgreSQL 16 | 5432 | `localhost:5432` |
+---
 
-## Pré-requisitos no Windows
+## 💼 Projetos em Produção & Destaques
 
-Instale o [VS Code](https://code.visualstudio.com/), o [Docker Desktop para Windows](https://docs.docker.com/desktop/setup/install/windows-install/) e o WSL 2. A documentação do Docker recomenda o backend WSL 2 para a maioria dos usuários e informa os requisitos atuais do Windows.[1]
+### 🏋️ EvoTrainer (ConsultoriaFit)
+> **Plataforma Proprietária de Prescrição e Consultoria Esportiva com Suporte Clínico de IA**
 
-Abra o PowerShell como administrador e confirme o WSL:
+Sistema completo desenvolvido para operar a minha própria consultoria fitness online, atuando como ecossistema de atendimento direto aos meus alunos e laboratório de validação técnica com arquitetura preparada para futura expansão em SaaS B2B multi-tenant.
 
-```powershell
-wsl --install
-wsl --update
-wsl --version
-```
+* **Destaques de Engenharia & Negócio:**
+  * **Motor Cinesiológico com OpenAI & Zod:** Geração assistida de treinos individualizados com matriz combinatória dinâmica (mais de 1 milhão de variações possíveis de implementos, ângulos de banco e vetores de tração/empurrar).
+  * **Triagem Clínica Universal Automatizada:** Algoritmo cinesiológico que interpreta queixas livres do aluno na anamnese (fibromialgia, condromalácia patelar, hérnias de disco, impacto subacromial) e aplica salvaguardas biomecânicas instantâneas (ajuste de amplitude, alívio de sobrecarga axial e controle de RIR).
+  * **Central Técnica do Treinador (Admin):** Interface operacional para gestão de alunos sem atritos, busca em tempo real, editor técnico completo de exercícios e exportação/impressão de fichas para os alunos.
+  * **Arquitetura Escalável & Preparada para SaaS:** Backend modular construído sobre regras desacopladas, tipagem rigorosa de ponta a ponta e persistência relacional modelada para suportar expansão comercial para outros treinadores.
+* **Stack:** Fastify, Next.js (App Router), TypeScript, Prisma ORM, PostgreSQL, OpenAI API, Tailwind CSS, Docker.
 
-No Docker Desktop, abra **Settings > General** e confirme **Use WSL 2 based engine**. Se utilizar uma distribuição Ubuntu, ative-a também em **Settings > Resources > WSL Integration**.[2]
+---
 
-## Execução rápida pelo terminal do VS Code
+### 📍 AlvoLocal
+> **Plataforma B2B para Prospecção e Qualificação de Leads Locais via IA**
 
-### 1. Extraia o projeto
+Solução voltada para prospecção ativa de clientes B2B, permitindo mapear oportunidades comerciais em áreas geográficas específicas com enriquecimento automatizado de dados.
 
-Extraia o ZIP em uma pasta sem sincronização agressiva, por exemplo:
+* **Destaques de Engenharia:**
+  * Integração com Google Places API para extração massiva de estabelecimentos locais.
+  * Pipeline de análise automatizada com IA para qualificar a maturidade digital e presença online dos leads.
+  * CRM integrado com fluxo em estilo Kanban para acompanhamento de etapas de contato e conversão.
+  * Gateway de cobrança via Mercado Pago para gestão de assinaturas recorrentes.
+* **Stack:** Next.js, Node.js, OpenAI API, PostgreSQL, Docker, Mercado Pago SDK.
 
-```text
-C:\Projetos\ConsultoriaFit
-```
+---
 
-Abra essa pasta no VS Code por **File > Open Folder**. Inicie o Docker Desktop e aguarde o indicador informar que o mecanismo está em execução.
+### ⚖️ AP Cálculos
+> **Motor de Automação de Cálculos Trabalhistas e Integração PJe-Calc**
 
-### 2. Crie o arquivo de ambiente
+Solução voltada para o setor jurídico que acelera a liquidação de sentenças judiciais através de processamento automatizado de dados processuais.
 
-No terminal PowerShell do VS Code, execute:
+* **Destaques de Engenharia:**
+  * Scripts em Python com Playwright para extração de dados e automação de rotinas no PJe-Calc.
+  * Padronização de rubricas, reflexos e atualização monetária em lote.
+  * Redução significativa no tempo operacional de elaboração de laudos periciais e cálculos judiciais.
+* **Stack:** Python, Playwright, Pandas, Flask.
 
-```powershell
-Copy-Item .env.example .env
-```
+---
 
-O arquivo já usa `OPENAI_API_KEY=mock`. Nesse modo, a API produz um treino válido localmente e não chama serviços pagos.
+### 👕 SambaVest
+> **E-commerce de Moda e Cultura do Carnaval Brasileiro**
 
-### 3. Construa e inicie os containers
+Marca e loja virtual voltada ao vestuário temático e personalizado das tradicionais escolas de samba do Rio de Janeiro e de São Paulo.
 
-```powershell
-docker compose up --build -d
-```
+* **Destaques de Engenharia:**
+  * Integração de checkout transparente e rastreamento avançado de eventos via Meta Pixel.
+  * Fluxo integrado com ERP Bling e cotação logística automatizada via Melhor Envio.
+  * Arquitetura focada em alta taxa de conversão móvel e carregamento otimizado de mídia.
+* **Stack:** Nuvemshop, Dropi, Bling ERP, Melhor Envio, Meta Ads API.
 
-Na primeira execução, o download das imagens e a compilação podem levar alguns minutos. A API executa `prisma migrate deploy` automaticamente antes de iniciar.
+---
 
-### 4. Execute o seed
+### 🦷 Gestão Dental & Consultórios
+> **Landing Page de Alta Conversão & Sistema de Gestão para Clínicas Odontológicas**
 
-```powershell
-docker compose exec api npm run db:seed
-```
+Aplicação de captação de pacientes e gestão de agendamentos voltada para clínicas e consultórios odontológicos.
 
-O seed é idempotente. Ele cria ou atualiza estes perfis:
+* **Destaques de Engenharia:**
+  * Interface moderna e responsiva voltada para autoridade profissional e conversão direta via WhatsApp.
+  * Painel administrativo para acompanhamento de consultas, histórico de contatos e status de comparecimento.
+* **Stack:** Next.js, Python (Flask), Tailwind CSS, Prisma ORM.
 
-| Papel | Nome | E-mail |
-| --- | --- | --- |
-| Personal | Marina Personal | `personal@consultoriafit.local` |
-| Aluno | Lucas Almeida | `aluno@consultoriafit.local` |
+---
 
-### 5. Teste o fluxo de ponta a ponta
+## 📈 Padrões de Engenharia & Boas Práticas
 
-Acesse http://localhost:3000 e siga esta sequência:
+* **Arquitetura Desacoplada:** Separação estrita entre regras de negócio (APIs) e camadas de apresentação (Web/Mobile).
+* **Segurança e Tipagem:** Código fortemente tipado em TypeScript, validação rigorosa de schemas via Zod e hashing criptográfico seguro para credenciais.
+* **Resiliência:** Tratamento global de erros HTTP com CORS configurado para múltiplos domínios e proteção de rotas com guards customizados.
+* **DevOps First:** Deploy conteinerizado com Docker Compose garantindo ambientes idênticos entre desenvolvimento e produção.
 
-1. Abra **Anamnese**, selecione Lucas Almeida, preencha os dados e envie.
-2. No **Painel Personal**, localize a avaliação e clique em **Gerar com IA**.
-3. Edite séries, repetições, RIR, descanso, cadência ou observações. Clique em **Salvar rascunho**.
-4. Clique em **Aprovar treino**. A versão ativa anterior, se existir, será arquivada.
-5. Abra **Meu treino**, confira o badge da sessão anterior, assista aos vídeos cadastrados e registre carga, repetições e RPE por série.
-6. Abra **Check-in**, informe dor, fadiga, peso e observações. O último registro aparecerá no painel do personal, com alerta vermelho para dor a partir de 5.
-7. Use **Imprimir / Salvar PDF** no treino para gerar uma ficha A4 pelo diálogo nativo do navegador.
+---
 
-A documentação interativa da API fica em http://localhost:3333/docs. A verificação de saúde fica em http://localhost:3333/health.
+## 📬 Contato & Redes
 
-## Script automático para Windows
-
-Como alternativa aos comandos manuais, execute:
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\start-windows.ps1
-```
-
-O script cria `.env` quando necessário, executa o build, inicia os containers, aplica o seed e exibe os endereços da aplicação.
-
-## Usar a OpenAI real
-
-Edite o arquivo `.env` e substitua:
-
-```dotenv
-OPENAI_API_KEY=mock
-```
-
-por:
-
-```dotenv
-OPENAI_API_KEY=sua-chave-real
-```
-
-Opcionalmente, altere `OPENAI_MODEL=gpt-4o-mini` no `.env`. Depois, recrie somente a API:
-
-```powershell
-docker compose up -d --build api
-```
-
-A chave fica somente no ambiente do container da API. Ela nunca é enviada ao navegador. A API exige resposta JSON, valida a estrutura com Zod e aplica uma verificação adicional para restrições de ombro. Falhas do provedor retornam erro controlado; o sistema não troca silenciosamente para o modo simulado quando uma chave real está configurada.
-
-## Aplicar a migração Prisma
-
-O repositório já inclui a migração incremental `20260916210000_retention_scale`. No Docker Compose, ela é aplicada automaticamente pelo comando de inicialização da API. Para aplicá-la manualmente em um ambiente existente, execute:
-
-```powershell
-docker compose up -d postgres
-docker compose run --rm api npx prisma migrate deploy
-docker compose up -d
-```
-
-Durante desenvolvimento local, depois de alterar o schema, use `npx prisma migrate dev --name nome_da_alteracao`. O comando `npx prisma db push` deve ficar restrito a protótipos descartáveis, pois não produz o histórico de migrações usado em produção.
-
-## Mercado Pago e controle de acesso
-
-O endpoint é `POST /api/webhooks/mercadopago`. Cadastre uma URL pública HTTPS terminando nesse caminho e habilite o evento **Payments**. O Mercado Pago envia `payment.created` e `payment.updated`, espera uma resposta HTTP 200 ou 201 e recomenda consultar `GET /v1/payments/{id}` antes de atualizar o sistema.[3]
-
-Defina `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` no `.env`. A API valida `x-signature` por HMAC-SHA256 e localiza o aluno por `metadata.user_id`, `external_reference`, e-mail do pagador ou ID de cliente. Pagamentos aprovados ativam o acesso; recusados deixam a assinatura em atraso; cancelamentos, estornos e chargebacks cancelam o acesso. Com os valores `mock_token` e `mock_secret`, é possível testar localmente sem chamadas externas.
-
-## WhatsApp
-
-Defina `WHATSAPP_API_URL` com o endpoint HTTP completo do seu provedor e troque `WHATSAPP_API_KEY`. O dispatcher envia JSON no formato `{ "phone": "...", "message": "..." }`, com os cabeçalhos `Authorization: Bearer` e `apikey`. Adapte somente esse pequeno serviço caso o seu provedor exija outro contrato. Com `mock_key`, ou se o telefone estiver ausente, a mensagem é registrada como log estruturado e a aprovação do treino continua normalmente.
-
-## Opções de execução
-
-| Abordagem | Trade-offs | Custo | Complexidade de configuração |
-| --- | --- | --- | --- |
-| Docker Compose local | Ideal para testar todas as telas; provedores externos não conseguem chamar `localhost` diretamente. | Sem custo de hospedagem | Baixa |
-| Servidor público com HTTPS | Recebe webhooks reais e mantém o sistema disponível continuamente; exige domínio, segredos e operação do servidor. | Depende do provedor | Média |
-
-## Comandos úteis
-
-```powershell
-# Acompanhar todos os logs
-docker compose logs -f
-
-# Acompanhar apenas a API
-docker compose logs -f api
-
-# Ver o estado dos serviços
-docker compose ps
-
-# Parar sem apagar os dados
-docker compose down
-
-# Parar e apagar também o banco local
-docker compose down -v
-
-# Reexecutar o seed
-docker compose exec api npm run db:seed
-
-# Reconstruir após alterar código
-docker compose up --build -d
-
-# Reconstruir apenas a API sem usar cache e recriar o container
-docker compose build --no-cache api
-docker compose up -d --force-recreate api
-```
-
-> **Atenção:** `docker compose down -v` remove o volume do PostgreSQL e apaga os dados locais.
-
-## Estrutura do projeto
-
-```text
-ConsultoriaFit/
-├── docker-compose.yml
-├── .env.example
-├── start-windows.ps1
-├── services/
-│   ├── api/
-│   │   ├── prisma/
-│   │   │   ├── migrations/
-│   │   │   ├── schema.prisma
-│   │   │   └── seed.ts
-│   │   ├── src/
-│   │   │   ├── lib/
-│   │   │   └── modules/
-│   │   └── Dockerfile
-│   └── web/
-│       ├── src/app/
-│       ├── src/components/
-│       ├── src/lib/
-│       └── Dockerfile
-└── README.md
-```
-
-## Arquitetura e regras de segurança
-
-O navegador chama somente rotas com o prefixo `/api`, de acordo com a documentação Swagger. A API centraliza a validação de entrada e a serialização das respostas. O gerador recebe a anamnese como dados delimitados, exige um JSON sem propriedades extras e só persiste a saída depois da validação Zod.
-
-Planos recém-gerados recebem o estado `DRAFT`. A aprovação ocorre em uma transação: o treino ativo anterior é arquivado e o rascunho selecionado se torna `ACTIVE`. O aluno consulta apenas o plano ativo. Um registro de série só é aceito quando o exercício pertence a esse plano.
-
-A aplicação demonstra o fluxo funcional com perfis seed e login JWT de demonstração em `POST /api/auth/demo-login`. Para uma implantação pública, implemente um provedor de identidade real, controle de acesso por rota, HTTPS, rate limiting, política de retenção e consentimento adequado para dados de saúde.
-
-## Solução de problemas
-
-**A porta já está em uso.** Altere `WEB_PORT`, `PORT` ou `POSTGRES_PORT` no `.env`. Se alterar `PORT`, ajuste também `NEXT_PUBLIC_API_URL` e reconstrua o serviço web.
-
-**O frontend não encontra a API.** Confirme que `NEXT_PUBLIC_API_URL=http://localhost:3333/api` contém o prefixo `/api` e execute `docker compose up -d --build web`.
-
-**O banco não inicia.** Rode `docker compose logs postgres`. Para descartar um banco local corrompido durante testes, use `docker compose down -v` e inicie novamente.
-
-**O seed falha porque a API ainda está iniciando.** Aguarde alguns segundos e repita `docker compose exec api npm run db:seed`.
-
-**A OpenAI retorna erro.** Confirme a chave, o modelo disponível e a conexão. Para voltar ao teste local, defina `OPENAI_API_KEY=mock` e reconstrua a API.
-
-## Referências
-
-[1]: https://docs.docker.com/desktop/setup/install/windows-install/ "Install Docker Desktop on Windows"
-[2]: https://docs.docker.com/desktop/features/wsl/ "Docker Desktop WSL 2 backend on Windows"
-[3]: https://www.mercadopago.com.mx/developers/en/docs/checkout-pro-preferences/payment-notifications "Mercado Pago — Configure payment notifications"
+* **GitHub:** [github.com/Felicordeirofcf](https://github.com/Felicordeirofcf)
+* **Localização:** Rio de Janeiro - RJ, Brasil
