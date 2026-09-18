@@ -31,20 +31,21 @@ enum Gender {
 }
 
 model User {
-  id                    String             @id @default(cuid())
+  id                    String               @id @default(cuid())
   name                  String
-  email                 String             @unique
-  cpf                   String             @unique
+  email                 String               @unique
+  cpf                   String               @unique
   phone                 String?
   passwordHash          String
   role                  UserRole
-  gender                Gender             @default(MALE)
-  subscriptionStatus    SubscriptionStatus @default(INACTIVE)
-  mercadoPagoCustomerId String?            @unique
-  createdAt             DateTime           @default(now())
+  gender                Gender               @default(MALE)
+  subscriptionStatus    SubscriptionStatus   @default(INACTIVE)
+  mercadoPagoCustomerId String?              @unique
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
   feedbacks             Feedback[]
-  spreadsheets           Spreadsheet[]
-  anamneses             Anamnesis[]
+  spreadsheets          Spreadsheet[]
+  anamnesis             Anamnesis[]
   workoutPlans          WorkoutPlan[]
   workoutLogs           WorkoutLog[]
   workoutSessions       WorkoutSession[]
@@ -96,7 +97,7 @@ model Split {
 }
 
 model SplitExercise {
-  id          String @id @default(cuid())
+  id          String   @id @default(cuid())
   splitId     String
   name        String
   sets        Int
@@ -107,21 +108,21 @@ model SplitExercise {
   notes       String?
   videoUrl    String?
   order       Int
-  split       Split  @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  split       Split    @relation(fields: [splitId], references: [id], onDelete: Cascade)
 
   @@index([splitId, order])
 }
 
 model WorkoutLog {
-  id         String   @id @default(cuid())
-  userId     String
-  exercise   String
-  setNumber  Int
-  weightUsed Float
-  repsDone   Int
-  rpe        Float?
-  loggedAt   DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  exercise    String
+  setNumber   Int
+  weightUsed  Float
+  repsDone    Int
+  rpe         Float?
+  loggedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, exercise, loggedAt])
 }
@@ -171,14 +172,14 @@ model Subscription {
 }
 
 model Feedback {
-  id              String   @id @default(cuid())
-  userId          String
-  fatigueLevel    Int
-  jointPainLevel  Int
-  loadDifficulty  Int
-  message         String?
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  userId         String
+  fatigueLevel   Int
+  jointPainLevel Int
+  loadDifficulty Int
+  message        String?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
@@ -197,13 +198,13 @@ model Spreadsheet {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
 }

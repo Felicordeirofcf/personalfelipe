@@ -6,11 +6,14 @@ import { adminGuard } from '../../plugins/auth.guard';
 const CreateAnamnesisSchema = z
   .object({
     userId: z.string().trim().min(1),
-    goal: z.string().trim().min(5).max(500),
+    goal: z.string().trim().min(2).max(500),
     experience: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
     gender: z.enum(['MALE', 'FEMALE']).default('MALE'),
-    weeklyDays: z.number().int().min(1).max(7),
-    injuries: z.array(z.string().trim().min(2).max(250)).max(10).default([]),
+    weeklyDays: z.coerce.number().int().min(1).max(7),
+    injuries: z
+      .array(z.string().trim())
+      .transform((arr) => arr.filter((s) => s.length > 0))
+      .default([]),
     availableEquip: z.string().trim().min(2).max(500),
   })
   .strict();
@@ -36,7 +39,7 @@ export async function anamnesisRoutes(app: FastifyInstance) {
 
       const student = await prisma.user.findFirst({
         where: { id: parsed.data.userId, role: 'STUDENT' },
-        select: { id: true },
+        select: { id: true, gender: true },
       });
       if (!student) {
         return reply.notFound('Aluno não encontrado.');
@@ -46,12 +49,28 @@ export async function anamnesisRoutes(app: FastifyInstance) {
         return reply.forbidden('Você só pode enviar a sua própria avaliação.');
       }
 
-      const anamnesis = await prisma.anamnesis.create({
-        data: parsed.data,
-        include: { user: { select: { id: true, name: true, email: true } } },
-      });
+      // Salva a anamnese e atualiza o gênero no usuário em uma única transação
+      const [anamnesis] = await prisma.$transaction([
+        prisma.anamnesis.create({
+          data: {
+            userId: parsed.data.userId,
+            goal: parsed.data.goal,
+            experience: parsed.data.experience,
+            gender: parsed.data.gender,
+            weeklyDays: parsed.data.weeklyDays,
+            injuries: parsed.data.injuries,
+            availableEquip: parsed.data.availableEquip,
+          },
+          include: { user: { select: { id: true, name: true, email: true } } },
+        }),
+        prisma.user.update({
+          where: { id: student.id },
+          data: { gender: parsed.data.gender },
+        }),
+      ]);
 
       return reply.status(201).send({
+        success: true,
         anamnesis: {
           id: anamnesis.id,
           userId: anamnesis.userId,
@@ -59,7 +78,7 @@ export async function anamnesisRoutes(app: FastifyInstance) {
           experience: anamnesis.experience,
           gender: anamnesis.gender,
           weeklyDays: anamnesis.weeklyDays,
-          injuries: anamnesis.injuries.filter(Boolean),
+          injuries: anamnesis.injuries,
           availableEquip: anamnesis.availableEquip,
           createdAt: anamnesis.createdAt,
           user: { ...anamnesis.user },
