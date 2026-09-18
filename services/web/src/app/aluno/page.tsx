@@ -41,16 +41,16 @@ export default function AlunoPage() {
         setUser(currentUser);
         saveSession(token, currentUser);
 
-        // Se o pagamento ainda não foi aprovado
-        if (currentUser.subscriptionStatus !== 'ACTIVE') {
-          setAccessMessage('Seu cadastro foi recebido e aguarda ativação do personal. As planilhas e treinos serão liberados após a ativação.');
-          setChecking(false);
+        // 1. TRAVA ABSOLUTA: Exige a anamnese primeiro, mesmo se o aluno estiver INACTIVE
+        if (!currentUser.hasCompletedAnamnesis) {
+          router.replace('/anamnese');
           return;
         }
 
-        // TRAVA OBRIGATÓRIA: Se está ATIVO mas ainda não completou a anamnese
-        if (!currentUser.hasCompletedAnamnesis) {
-          router.replace('/anamnese');
+        // 2. Se já completou a anamnese, verifica se o pagamento/ativação está pendente
+        if (currentUser.subscriptionStatus !== 'ACTIVE') {
+          setAccessMessage('Seu cadastro e anamnese foram recebidos e aguardam ativação do personal. As planilhas e treinos serão liberados após a ativação.');
+          setChecking(false);
           return;
         }
 
