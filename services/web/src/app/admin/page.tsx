@@ -14,6 +14,7 @@ import {
   CheckCircle2, 
   CircleGauge, 
   Dumbbell, 
+  ExternalLink,
   HeartPulse, 
   RefreshCw, 
   Scale, 
@@ -126,7 +127,7 @@ export default function AdminPage() {
       <PageIntro
         eyebrow="Central do personal"
         title="Decisão técnica em primeiro plano."
-        description="Veja novas avaliações, selecione o aluno diretamente na lista e ajuste cada variável antes de liberar o plano."
+        description="Veja novas avaliações, gerencie o histórico e acerte a prescrição de cada aluno."
         action={<Button variant="ghost" onClick={loadData} loading={loading}><RefreshCw size={17} /> Atualizar dados</Button>}
       />
 
@@ -147,7 +148,7 @@ export default function AdminPage() {
 
       <CommercialAdminPanel />
 
-      {/* CARD DO ALUNO SELECIONADO (Substitui o menu dropdown) */}
+      {/* CARD DO ALUNO SELECIONADO COM BOTÃO DIRETO PARA A PÁGINA INDIVIDUAL */}
       <Panel className="mb-7 p-5 md:p-6 border-emerald-500/20 bg-zinc-950/40">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -168,21 +169,31 @@ export default function AdminPage() {
           </div>
 
           {selectedAnamnesis && (
-            <div className="grid grid-cols-3 gap-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 text-xs">
-              <div>
-                <b className="block text-zinc-500">Objetivo</b>
-                <span className="text-zinc-200">{selectedAnamnesis.goal}</span>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="grid grid-cols-3 gap-3 rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 text-xs">
+                <div>
+                  <b className="block text-zinc-500">Objetivo</b>
+                  <span className="text-zinc-200">{selectedAnamnesis.goal}</span>
+                </div>
+                <div>
+                  <b className="block text-zinc-500">Frequência</b>
+                  <span className="text-zinc-200">{selectedAnamnesis.weeklyDays}x/sem</span>
+                </div>
+                <div>
+                  <b className="block text-zinc-500">Restrições</b>
+                  <span className="text-zinc-200 truncate">
+                    {selectedAnamnesis.injuries.length ? selectedAnamnesis.injuries.join(', ') : 'Nenhuma'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <b className="block text-zinc-500">Frequência</b>
-                <span className="text-zinc-200">{selectedAnamnesis.weeklyDays}x por semana</span>
-              </div>
-              <div>
-                <b className="block text-zinc-500">Restrições</b>
-                <span className="text-zinc-200">
-                  {selectedAnamnesis.injuries.length ? selectedAnamnesis.injuries.join(', ') : 'Nenhuma'}
-                </span>
-              </div>
+
+              <Button
+                variant="dark"
+                className="whitespace-nowrap flex items-center gap-2 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-950/50"
+                onClick={() => router.push(`/admin/aluno/${selectedAnamnesis.user.id}`)}
+              >
+                Abrir prontuário completo <ExternalLink size={15} />
+              </Button>
             </div>
           )}
         </div>
@@ -198,9 +209,8 @@ export default function AdminPage() {
                   {visibleAnamneses.length} de {anamneses.length}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-zinc-400">Clique no card para carregar o aluno</p>
+              <p className="mt-1 text-xs text-zinc-400">Clique para selecionar ou no ícone para abrir a página</p>
 
-              {/* Barra de Pesquisa Rápida */}
               <div className="relative mt-4">
                 <Search className="absolute left-3 top-3 text-zinc-500" size={16} />
                 <input 
@@ -211,7 +221,6 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Filtros de Status */}
               <div className="mt-3 flex gap-2">
                 <button 
                   type="button" 
@@ -237,7 +246,6 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Lista Rolável com Seleção Ativa */}
             <div className="max-h-[620px] space-y-3 overflow-y-auto p-3">
               {loading ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Carregando avaliações...</p> : null}
               {!loading && visibleAnamneses.length === 0 ? <p className="p-5 text-center text-sm font-semibold text-zinc-400">Nenhum aluno encontrado.</p> : null}
@@ -263,15 +271,37 @@ export default function AdminPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className={`font-display font-bold ${isSelected ? 'text-emerald-300' : 'text-white'}`}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/aluno/${item.user.id}`);
+                            }}
+                            className={`font-display font-bold text-left hover:underline flex items-center gap-1 ${isSelected ? 'text-emerald-300' : 'text-white'}`}
+                            title="Ir para a página deste aluno"
+                          >
                             {item.user.name}
-                          </p>
+                            <ExternalLink size={13} className="opacity-70" />
+                          </button>
                           {isSelected && <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />}
                         </div>
                         <p className="mt-0.5 text-xs font-semibold text-zinc-400">{item.user.email}</p>
                         <p className="mt-1 text-[11px] font-bold text-zinc-500">{experienceLabels[item.experience]}</p>
                       </div>
-                      {item.pending ? <StatusBadge status="PENDING" /> : item.latestPlan ? <StatusBadge status={item.latestPlan.status} /> : null}
+
+                      <div className="flex flex-col items-end gap-1.5">
+                        {item.pending ? <StatusBadge status="PENDING" /> : item.latestPlan ? <StatusBadge status={item.latestPlan.status} /> : null}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/admin/aluno/${item.user.id}`);
+                          }}
+                          className="rounded-lg border border-zinc-800 bg-zinc-900/80 px-2 py-1 text-[10px] font-bold text-zinc-300 hover:border-emerald-500/50 hover:text-white"
+                        >
+                          Ver perfil
+                        </button>
+                      </div>
                     </div>
 
                     <p className="mt-3 line-clamp-2 text-xs leading-5 text-zinc-300">{item.goal}</p>
